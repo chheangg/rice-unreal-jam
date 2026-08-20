@@ -21,6 +21,8 @@ just because depth couldn't load.
 """
 
 import threading
+from collections import deque
+
 import numpy as np
 
 # Default model. DA3METRIC-LARGE returns *metric* depth (meters), which is
@@ -28,26 +30,47 @@ import numpy as np
 # for much faster (but relative, not metric) depth on weaker hardware.
 DEFAULT_MODEL = "depth-anything/DA3METRIC-LARGE"
 
+# DA3 downsizes every frame to this many pixels on its long side before
+# inferring (its own default is 504). Raising it gives each tracked block
+# more depth pixels to median over - sharper per-block depth - at the direct
+# cost of slower inference, i.e. fewer depth updates per second. That's the
+# "fewer, better analyses vs. more, noisier ones" tradeoff: tune this down if
+# the demo needs snappier z updates more than it needs precision.
+DEFAULT_PROCESS_RES = 756
+
+# How many of the most recent depth maps to pool together in depth_at().
+# Smooths out frame-to-frame noise in the model's own output, independent of
+# spatial (per-box) averaging. 1 = no temporal smoothing (old behavior).
+DEFAULT_SMOOTH_FRAMES = 5
+
 
 class DepthEstimator:
-    def __init__(self, model_id=DEFAULT_MODEL, device=None, metric_scale=1.0):
+    def __init__(self, model_id=DEFAULT_MODEL, device=None, metric_scale=1.0,
+                 process_res=DEFAULT_PROCESS_RES, smooth_frames=DEFAULT_SMOOTH_FRAMES):
         """
-        model_id     : HuggingFace repo id of a DA3 checkpoint.
-        device       : "cuda" / "cpu" / None (auto-pick cuda if available).
-        metric_scale : multiplier applied to the model's metric output. Leave
-                       at 1.0 for meters; tune if your Unreal scale needs it.
+        model_id      : HuggingFace repo id of a DA3 checkpoint.
+        device        : "cuda" / "cpu" / None (auto-pick cuda if available).
+        metric_scale  : multiplier applied to the model's metric output. Leave
+                        at 1.0 for meters; tune if your Unreal scale needs it.
+        process_res   : DA3's internal inference resolution (long side, px).
+                        Higher = more accurate per-block depth, slower/fewer
+                        updates per second. See DEFAULT_PROCESS_RES above.
+        smooth_frames : how many recent depth maps to pool per depth_at()
+                        call. Higher = steadier z, slower to react to real
+                        movement. 1 disables temporal smoothing.
         """
         self.model_id = model_id
         self.metric_scale = metric_scale
+        self.process_res = process_res
         self.available = False
         self.device = device
 
         self._model = None
-        self._depth = None          # latest metric depth map, HxW float32 (meters)
-        self._depth_src_shape = None  # (H, W) of the frame that produced _depth -
-                                       # DA3 runs inference at a resized resolution,
-                                       # so depth_at() needs this to map a box given
-                                       # in original-frame pixels into depth-map pixels.
+        # Ring buffer of (depth_map, src_shape) pairs, newest last. src_shape
+        # is the (H, W) of the camera frame that produced that depth map - DA3
+        # runs inference at a resized resolution, so depth_at() needs it to
+        # map a box given in original-frame pixels into depth-map pixels.
+        self._depth_history = deque(maxlen=max(1, smooth_frames))
         self._depth_lock = threading.Lock()
         self._latest_frame = None   # newest RGB frame handed in by the caller
         self._frame_lock = threading.Lock()
@@ -125,34 +148,44 @@ class DepthEstimator:
         Median metric depth (meters) over an axis-aligned bounding box
         `box = (x, y, w, h)`, given in the ORIGINAL camera frame's pixel
         coordinates (i.e. what detect_xyz.py's blob boxes are in). Returns
-        None if no depth is available yet. Median over the box is robust to
-        a few bad pixels / edges.
+        None if no depth is available yet.
+
+        Pools pixels from the last `smooth_frames` depth maps (not just the
+        newest one) before taking the median - spatial averaging (over the
+        box) alone is noisy when a small block only covers a few depth
+        pixels; pooling across recent frames adds temporal averaging on top,
+        without needing to slow down inference to get it.
         """
         with self._depth_lock:
-            depth = self._depth
-            src_shape = self._depth_src_shape
-        if depth is None or src_shape is None:
+            history = list(self._depth_history)
+        if not history:
             return None
-        H, W = depth.shape
-        src_H, src_W = src_shape
-        # DA3 runs inference on a resized copy of the frame, so the depth map's
-        # resolution differs from the source frame's - scale the box into
-        # depth-map pixel space before indexing (see #DA3-depth-scale-mismatch).
-        sx, sy = W / src_W, H / src_H
+
         x, y, w, h = box
-        x0, y0 = max(0, int(x * sx)), max(0, int(y * sy))
-        x1, y1 = min(W, int((x + w) * sx)), min(H, int((y + h) * sy))
-        if x1 <= x0 or y1 <= y0:
+        pixels = []
+        for depth, src_shape in history:
+            H, W = depth.shape
+            src_H, src_W = src_shape
+            # DA3 runs inference on a resized copy of the frame, so the depth
+            # map's resolution differs from the source frame's - scale the
+            # box into depth-map pixel space before indexing.
+            sx, sy = W / src_W, H / src_H
+            x0, y0 = max(0, int(x * sx)), max(0, int(y * sy))
+            x1, y1 = min(W, int((x + w) * sx)), min(H, int((y + h) * sy))
+            if x1 <= x0 or y1 <= y0:
+                continue
+            patch = depth[y0:y1, x0:x1]
+            patch = patch[np.isfinite(patch)]
+            if patch.size:
+                pixels.append(patch)
+
+        if not pixels:
             return None
-        patch = depth[y0:y1, x0:x1]
-        patch = patch[np.isfinite(patch)]
-        if patch.size == 0:
-            return None
-        return float(np.median(patch)) * self.metric_scale
+        return float(np.median(np.concatenate(pixels))) * self.metric_scale
 
     def has_depth(self):
         with self._depth_lock:
-            return self._depth is not None
+            return len(self._depth_history) > 0
 
     # ---- worker loop -------------------------------------------------------
     def _run(self):
@@ -169,8 +202,7 @@ class DepthEstimator:
             try:
                 depth = self._infer(frame)
                 with self._depth_lock:
-                    self._depth = depth
-                    self._depth_src_shape = frame.shape[:2]
+                    self._depth_history.append((depth, frame.shape[:2]))
             except Exception as e:
                 self.last_error = repr(e)
                 print(f"[depth] inference error: {e}")
@@ -182,12 +214,12 @@ class DepthEstimator:
         # to a temp file if this build only accepts paths.
         pred = None
         try:
-            pred = self._model.inference([rgb])
+            pred = self._model.inference([rgb], process_res=self.process_res)
         except Exception:
             import tempfile, os, cv2
             tmp = os.path.join(tempfile.gettempdir(), "da3_frame.png")
             cv2.imwrite(tmp, rgb[:, :, ::-1])        # write back as BGR for cv2
-            pred = self._model.inference([tmp])
+            pred = self._model.inference([tmp], process_res=self.process_res)
 
         depth = np.asarray(pred.depth[0], dtype=np.float32)   # [H, W]
 
