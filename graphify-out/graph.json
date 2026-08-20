@@ -642,7 +642,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L237"
+      "source_location": "L250"
     },
     {
       "id": "lego_locator_xyz_make_aruco",
@@ -664,7 +664,7 @@
       "file_type": "code",
       "norm_label": "resolve_intrinsics()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L226"
+      "source_location": "L239"
     },
     {
       "id": "detect_stereo_find_blobs",
@@ -906,7 +906,7 @@
       "file_type": "code",
       "norm_label": ".age()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L218"
+      "source_location": "L231"
     },
     {
       "id": "lego_locator_xyz_tracks_init",
@@ -928,7 +928,7 @@
       "file_type": "code",
       "norm_label": ".update()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L190"
+      "source_location": "L193"
     },
     {
       "id": "platform_height_platformheightestimator_camera_point_to_world",
@@ -1423,14 +1423,14 @@
       "source_location": "L168"
     },
     {
-      "id": "lego_locator_xyz_rationale_227",
+      "id": "lego_locator_xyz_rationale_240",
       "label": "(fx, fy, cx, cy), source_label. Prefer DA3's; else assume an FOV.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "(fx, fy, cx, cy), source_label. prefer da3's; else assume an fov.",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L227"
+      "source_location": "L240"
     },
     {
       "id": "lego_locator_xyz_rationale_65",
@@ -1633,14 +1633,14 @@
       "source_location": "L175"
     },
     {
-      "id": "lego_locator_xyz_rationale_219",
+      "id": "lego_locator_xyz_rationale_232",
       "label": "Drop slots that haven't been matched for a while.",
       "_origin": "ast",
       "community": 8,
       "file_type": "rationale",
       "norm_label": "drop slots that haven't been matched for a while.",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L219"
+      "source_location": "L232"
     },
     {
       "id": "platform_height_rationale_190",
@@ -2350,7 +2350,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L254",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -2362,7 +2362,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L265",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -2374,7 +2374,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L266",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -2386,7 +2386,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L271",
+      "source_location": "L287",
       "weight": 1.0
     },
     {
@@ -2398,7 +2398,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L285",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -2410,7 +2410,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L294",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -2422,7 +2422,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L301",
+      "source_location": "L317",
       "weight": 1.0
     },
     {
@@ -2434,7 +2434,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L313",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -2446,7 +2446,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L323",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -3154,7 +3154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L226",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -3165,7 +3165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L237",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -3572,7 +3572,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L190",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -3583,7 +3583,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L218",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -4049,25 +4049,25 @@
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_219",
+      "source": "lego_locator_xyz_rationale_232",
       "target": "lego_locator_xyz_tracks_age",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L219",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_227",
+      "source": "lego_locator_xyz_rationale_240",
       "target": "lego_locator_xyz_resolve_intrinsics",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L227",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -4466,5 +4466,5 @@
       "source_file": "tasks/README.md"
     }
   ],
-  "built_at_commit": "fb2c4a0b4e344ccf7771e66eadc25b231064ad5c"
+  "built_at_commit": "3e301085dd8cf637ed9d3ff2c26bf87b49e92b6f"
 }
