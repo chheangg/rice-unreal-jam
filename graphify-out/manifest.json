@@ -1,0 +1,117 @@
+{
+  "MT03_RealTimeLayout/Saved/Autosaves/PackageRestoreData.json": {
+    "mtime": 1787253369.6777225,
+    "ast_hash": "c64929eb22596d00594ac4ca25e1c7b7",
+    "semantic_hash": "c64929eb22596d00594ac4ca25e1c7b7"
+  },
+  "MT03_RealTimeLayout/Saved/Config/WorldState/3222581562.json": {
+    "mtime": 1787253369.6799135,
+    "ast_hash": "4d031d5184c3590cdfdce9f28e97fb53",
+    "semantic_hash": "4d031d5184c3590cdfdce9f28e97fb53"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.50.json": {
+    "mtime": 1787253369.6847973,
+    "ast_hash": "5ffffc0973094b8cd78b037bc8d5a39a",
+    "semantic_hash": "5ffffc0973094b8cd78b037bc8d5a39a"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.51.json": {
+    "mtime": 1787253369.6850908,
+    "ast_hash": "0c2fe38013f52f76778aa942ed8d1812",
+    "semantic_hash": "0c2fe38013f52f76778aa942ed8d1812"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.52.json": {
+    "mtime": 1787253369.6853778,
+    "ast_hash": "791387bd9a2f268279ef076117d9e5ea",
+    "semantic_hash": "791387bd9a2f268279ef076117d9e5ea"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo.json": {
+    "mtime": 1787253369.6856163,
+    "ast_hash": "2571bccf6dccfba35db65f2f014ecaed",
+    "semantic_hash": "2571bccf6dccfba35db65f2f014ecaed"
+  },
+  "MT03_RealTimeLayout/Saved/SourceControl/UncontrolledChangelists.json": {
+    "mtime": 1787253369.8338118,
+    "ast_hash": "5b9092234b604105c1b46e407be36a56",
+    "semantic_hash": "5b9092234b604105c1b46e407be36a56"
+  },
+  "detect.py": {
+    "mtime": 1787253369.8591502,
+    "ast_hash": "1a33f5c60dd5aaf84ca456b707134a1f",
+    "semantic_hash": "1a33f5c60dd5aaf84ca456b707134a1f"
+  },
+  "inspect_bp.py": {
+    "mtime": 1787253369.8594286,
+    "ast_hash": "e182a1b2ca08a51f8b8ce43339bc28c5",
+    "semantic_hash": "e182a1b2ca08a51f8b8ce43339bc28c5"
+  },
+  "send_test.py": {
+    "mtime": 1787253370.3889136,
+    "ast_hash": "0312fa43800d90bbb83a963b4ae8a208",
+    "semantic_hash": "0312fa43800d90bbb83a963b4ae8a208"
+  },
+  "AGENTS.md": {
+    "mtime": 1787253855.7076614,
+    "ast_hash": "0b90e60fdfe4708142651470c8c5b551",
+    "semantic_hash": "0b90e60fdfe4708142651470c8c5b551"
+  },
+  "MT03_RealTimeLayout/Intermediate/PipInstall/extra_urls.txt": {
+    "mtime": 1787253369.6695213,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "MT03_RealTimeLayout/Saved/Crashes/UECC-Windows-A2EAEEAD452ADC7901FF13BA50B010D2_0000/Slate.txt": {
+    "mtime": 1787253369.6832936,
+    "ast_hash": "18f6c676d578c43617d55bc4ee2dd2be",
+    "semantic_hash": "18f6c676d578c43617d55bc4ee2dd2be"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.50.txt": {
+    "mtime": 1787253369.684954,
+    "ast_hash": "18770cff6b94208681b23c9c15c7f246",
+    "semantic_hash": "18770cff6b94208681b23c9c15c7f246"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.51.txt": {
+    "mtime": 1787253369.685242,
+    "ast_hash": "571f382666549f6e6414d50897ae76df",
+    "semantic_hash": "571f382666549f6e6414d50897ae76df"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.52.txt": {
+    "mtime": 1787253369.6854937,
+    "ast_hash": "a37454066667e3144e8ff1814548b4c5",
+    "semantic_hash": "a37454066667e3144e8ff1814548b4c5"
+  },
+  "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo.txt": {
+    "mtime": 1787253369.6857362,
+    "ast_hash": "c9ec7a02ff3f634b31cd0d752cfcacb6",
+    "semantic_hash": "c9ec7a02ff3f634b31cd0d752cfcacb6"
+  },
+  "MT03_RealTimeLayout/Saved/ShaderDebugInfo/PCD3D_SM6/WorldGridMaterial_67bacdd81a65e5e9/Default/DDCKey-Editor.txt": {
+    "mtime": 1787253369.8292198,
+    "ast_hash": "2b3cb3ff2d61b2fc46c1e71984086f98",
+    "semantic_hash": "2b3cb3ff2d61b2fc46c1e71984086f98"
+  },
+  "README.md": {
+    "mtime": 1787253855.7083247,
+    "ast_hash": "48e54191f0cb5e669ea666352efb1540",
+    "semantic_hash": "48e54191f0cb5e669ea666352efb1540"
+  },
+  "docs/ROADMAP.md": {
+    "mtime": 1787253855.7086802,
+    "ast_hash": "4ec5b3289271e4001e5e6ebc7fb4632d",
+    "semantic_hash": "4ec5b3289271e4001e5e6ebc7fb4632d"
+  },
+  "tasks/README.md": {
+    "mtime": 1787253855.708965,
+    "ast_hash": "2c62c1c6439e4f8c7b206be0255d3e0e",
+    "semantic_hash": "2c62c1c6439e4f8c7b206be0255d3e0e"
+  },
+  "tasks/TEMPLATE.md": {
+    "mtime": 1787253855.7091649,
+    "ast_hash": "253208255fb91872f56d00d72c56b3c2",
+    "semantic_hash": "253208255fb91872f56d00d72c56b3c2"
+  },
+  "MT03_RealTimeLayout/Saved/AutoScreenshot.png": {
+    "mtime": 1787253369.6707294,
+    "ast_hash": "4beb355ea9667cac8538d17943e51b48",
+    "semantic_hash": "4beb355ea9667cac8538d17943e51b48"
+  }
+}
