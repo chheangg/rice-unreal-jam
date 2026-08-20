@@ -13,6 +13,7 @@ current direction.
 MT03_RealTimeLayout/   Unreal Engine project (engine 5.8)
 detect.py              webcam block tracker -> sends OSC to Unreal
 send_test.py           fake tracker - replays the real OSC message, no camera
+camera_probe.py        checks what OpenCV can see (indices or a phone URL)
 inspect_bp.py          debug script, run inside Unreal's embedded Python
 Video/, mt03 outputs/  recordings + Premiere project files (Git LFS)
 tasks/                 task requests — see tasks/README.md
@@ -130,6 +131,38 @@ Two things it does on purpose that the current colour tracker doesn't:
 rotation path needs testing now), and `--churn` makes names come and go, which
 is what the ID-based receiver has to survive — spawn on a name it hasn't seen,
 cope with one going quiet. Ctrl-C to stop.
+
+### 4. Using a phone as the camera
+
+`camera_probe.py` answers "can OpenCV see this camera, and how fast?" before
+you touch the tracker:
+
+```
+python camera_probe.py                                  # scan indices 0..5
+python camera_probe.py 0                                # preview an index
+python camera_probe.py http://172.20.10.1:8080/video    # preview a phone stream
+```
+
+It reports resolution and, more importantly, **measured** fps rather than the
+fps the source claims - an IP camera app will happily advertise 30 and deliver
+6, which looks like a tracking bug but is a network problem.
+
+On **iPhone + Windows**, Continuity Camera is not an option (macOS only). Two
+routes work:
+
+- **IP camera app** (e.g. IP Camera Lite) - serves MJPEG over HTTP, no driver
+  on the laptop. Point OpenCV straight at the URL.
+- **Virtual webcam driver** (iVCam, EpocCam) - needs a laptop-side driver, but
+  the phone then shows up as an ordinary camera index and no code changes.
+
+For a demo, connect the laptop to the **iPhone's Personal Hotspot** rather than
+venue wifi. It's a direct private link, so it survives networks that isolate
+clients from each other, and needs no internet at all. On that hotspot the
+iPhone is always **172.20.10.1** (Apple uses a fixed 172.20.10.0/28 subnet).
+
+Don't route this through a relay like ngrok: it sends video to a cloud server
+and back to a laptop three feet away, adding latency to the one thing that has
+to feel instant, and puts your camera feed on a public URL.
 
 ## Notes
 
