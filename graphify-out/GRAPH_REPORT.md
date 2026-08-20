@@ -1,10 +1,10 @@
 # Graph Report - rice-unreal-jam  (2026-08-20)
 
 ## Corpus Check
-- Corpus is ~26,976 words - fits in a single context window. You may not need a graph.
+- Corpus is ~27,036 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 172 nodes · 227 edges · 18 communities (10 shown, 8 thin omitted)
+- 172 nodes · 228 edges · 18 communities (10 shown, 8 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -68,7 +68,7 @@ Cohesion: 0.09
 Nodes (11): DepthEstimator, depth_estimator.py — monocular depth for the block tracker, using Depth…, Launch the background inference worker (no-op if unavailable)., Hand the worker the latest frame (BGR, as OpenCV gives it)., Median metric depth (meters) over an axis-aligned bounding box `box = (x, y, w,…, Median metric depth (meters) over the TRUE pixels of `mask` - a uint8 image in…, Camera intrinsics (fx, fy, cx, cy) in the ORIGINAL camera frame's pixel…, Run DA3 on one RGB frame -> (metric depth map HxW float32 meters, 3x3… (+3 more)
 
 ### Community 2 - "Marker Detection Pipeline"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (20): as_source(), classify_shape(), color_mask(), find_pieces(), main(), lego_locator.py - universal Lego colour locator (step 1: reliable detection).…, Binary mask for one colour: its hue band(s), floored on S and V., Return {color_name: [contours]} and {color_name: mask}. (+12 more)
 
 ### Community 3 - "README Project Setup"
@@ -104,7 +104,7 @@ Nodes (3): Tiny per-colour tracker so a stationary piece reports a STEADY size/d
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `DepthEstimator` connect `Task Filing Workflow` to `Marker Detection Pipeline`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **Why does `PlatformHeightEstimator` connect `AGENTS.md Collaboration Guide` to `OSC Send Test Script`, `Community 10`?**
   _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Why does `main()` connect `Marker Detection Pipeline` to `README OSC Networking`, `Task Filing Workflow`?**
@@ -116,4 +116,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `Task Filing Workflow` be split into smaller, more focused modules?**
   _Cohesion score 0.08547008547008547 - nodes in this community are weakly interconnected._
 - **Should `Marker Detection Pipeline` be split into smaller, more focused modules?**
-  _Cohesion score 0.12333333333333334 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12666666666666668 - nodes in this community are weakly interconnected._

@@ -554,7 +554,7 @@
       "file_type": "code",
       "norm_label": "classify_shape()",
       "source_file": "lego_locator.py",
-      "source_location": "L72"
+      "source_location": "L73"
     },
     {
       "id": "lego_locator_color_mask",
@@ -565,7 +565,7 @@
       "file_type": "code",
       "norm_label": "color_mask()",
       "source_file": "lego_locator.py",
-      "source_location": "L102"
+      "source_location": "L109"
     },
     {
       "id": "lego_locator_find_pieces",
@@ -576,7 +576,7 @@
       "file_type": "code",
       "norm_label": "find_pieces()",
       "source_file": "lego_locator.py",
-      "source_location": "L116"
+      "source_location": "L123"
     },
     {
       "id": "lego_locator_main",
@@ -587,7 +587,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "lego_locator.py",
-      "source_location": "L129"
+      "source_location": "L136"
     },
     {
       "id": "lego_locator_xyz_detect_markers",
@@ -1373,34 +1373,34 @@
       "source_location": "L1"
     },
     {
-      "id": "lego_locator_rationale_103",
+      "id": "lego_locator_rationale_110",
       "label": "Binary mask for one colour: its hue band(s), floored on S and V.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "binary mask for one colour: its hue band(s), floored on s and v.",
       "source_file": "lego_locator.py",
-      "source_location": "L103"
+      "source_location": "L110"
     },
     {
-      "id": "lego_locator_rationale_117",
+      "id": "lego_locator_rationale_124",
       "label": "Return {color_name: [contours]} and {color_name: mask}.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "return {color_name: [contours]} and {color_name: mask}.",
       "source_file": "lego_locator.py",
-      "source_location": "L117"
+      "source_location": "L124"
     },
     {
-      "id": "lego_locator_rationale_73",
-      "label": "Label a piece contour as 'square', 'circle', 'cross', or '?'. Two features do\u2026",
+      "id": "lego_locator_rationale_74",
+      "label": "Label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'.\u2026",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
-      "norm_label": "label a piece contour as 'square', 'circle', 'cross', or '?'. two features do...",
+      "norm_label": "label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'....",
       "source_file": "lego_locator.py",
-      "source_location": "L73"
+      "source_location": "L74"
     },
     {
       "id": "lego_locator_xyz_rationale_1",
@@ -2302,7 +2302,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L120",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -2314,7 +2314,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L130",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -2326,7 +2326,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L158",
+      "source_location": "L165",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_main",
+      "target": "lego_locator_classify_shape",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "lego_locator.py",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -2434,7 +2446,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L322",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -3076,7 +3088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L102",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -3087,7 +3099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L116",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -3098,7 +3110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L129",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -3120,7 +3132,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L72",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -3971,36 +3983,36 @@
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_103",
+      "source": "lego_locator_rationale_110",
       "target": "lego_locator_color_mask",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L103",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_117",
+      "source": "lego_locator_rationale_124",
       "target": "lego_locator_find_pieces",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L117",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_73",
+      "source": "lego_locator_rationale_74",
       "target": "lego_locator_classify_shape",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -4454,5 +4466,5 @@
       "source_file": "tasks/README.md"
     }
   ],
-  "built_at_commit": "f23a1bba593d719e76c6c8e841d7f1ec023fb499"
+  "built_at_commit": "fb2c4a0b4e344ccf7771e66eadc25b231064ad5c"
 }
