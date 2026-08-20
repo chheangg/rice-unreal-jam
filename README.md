@@ -26,6 +26,34 @@ docs/                  roadmap and other project docs
   ```
   pip install opencv-python numpy python-osc
   ```
+- **(Optional) Depth Anything 3** — only needed for the xyz tracker
+  (`detect_xyz.py`), which adds a real `z` (depth) per block. DA3 is
+  ByteDance's monocular depth model and wants a CUDA GPU for interactive
+  rates:
+  ```
+  pip install "torch>=2" torchvision xformers
+  git clone https://github.com/ByteDance-Seed/Depth-Anything-3
+  pip install -e Depth-Anything-3
+  ```
+  The DA3 checkpoint (`depth-anything/DA3METRIC-LARGE`) downloads from
+  HuggingFace on first run. Without these, `detect_xyz.py` still runs but
+  falls back to 2D (sends `z = -1.0`).
+
+  **On a MacBook (Apple Silicon M1/M2/M3):** it works, with two changes.
+  `xformers` does **not** support Apple Silicon — **skip it** (installing it
+  causes runtime "operator not supported" errors), and let DA3 use the Mac
+  GPU via Metal (MPS):
+  ```
+  pip install "torch>=2" torchvision            # NO xformers on Mac
+  git clone https://github.com/ByteDance-Seed/Depth-Anything-3
+  pip install -e Depth-Anything-3
+  ```
+  `depth_estimator.py` auto-detects the M-series GPU (`mps`) and sets
+  `PYTORCH_ENABLE_MPS_FALLBACK=1` so any Metal-unsupported ops fall back to
+  CPU instead of crashing. Expect it to be usable but not fast: the M2 GPU is
+  far slower than a discrete NVIDIA card. For a smoother demo on a MacBook,
+  switch `DEFAULT_MODEL` in `depth_estimator.py` to `depth-anything/DA3-SMALL`
+  (faster, but relative depth rather than metric).
 - **Git LFS** — required to pull the video files and large Unreal cache
   files correctly:
   ```
@@ -59,6 +87,24 @@ This opens your default camera, detects:
 and streams `[name, x, y, angle, sizeX, sizeY]` to Unreal over OSC on the
 `/obj` address. A preview window shows what's being detected; press `Esc`
 to quit.
+
+### 2b. Want depth (x, y, **z**)?
+
+Run the depth-augmented tracker instead:
+
+```
+python detect_xyz.py
+```
+
+Same tracking as `detect.py`, but each block also gets a `z` (metric depth
+in meters, smaller = closer) from Depth Anything 3, computed on a background
+thread so the preview stays smooth. It streams
+`[name, x, y, angle, sizeX, sizeY, z]` on `/obj` — note `z` is **appended at
+the end**, so every existing "Get at Index 0..5" node in the Unreal Blueprint
+keeps working; just add a "Get at Index 6" for `z`. Absolute depth scale can
+need per-rig calibration — if `z` looks off versus a tape measure, tune
+`metric_scale` in `depth_estimator.py`. Requires the optional DA3 install
+above; without it, it prints a warning and sends `z = -1.0`.
 
 ### 3. No camera handy?
 

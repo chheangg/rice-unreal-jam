@@ -89,6 +89,25 @@ cv2.destroyAllWindows()
 
 ---
 
+## Depth / z (new — added alongside the 2D tracker)
+
+`detect_xyz.py` + `depth_estimator.py` add a real `z` per block using
+**Depth Anything 3** (ByteDance's monocular depth model — *not* Facebook's,
+despite how it's sometimes referred to). Design notes:
+
+- Heavy transformer, so depth runs on a **background thread** on the newest
+  frame; the detection loop just reads the latest depth map. Preview stays
+  smooth, z refreshes as fast as the GPU allows.
+- `z` is **appended** to the OSC message (`[name,x,y,angle,sx,sy,z]`) so the
+  existing Blueprint index reads don't shift — UE just needs a new
+  "Get at Index 6".
+- Metric depth in meters (smaller = closer). Absolute scale may need per-rig
+  calibration (`metric_scale` knob).
+- **Fails soft:** no torch / no DA3 / no GPU → falls back to 2D, sends
+  `z = -1.0`. The original `detect.py` is untouched as the safe fallback.
+- Wants a CUDA GPU for interactive rates; on the CPU it will crawl (consider
+  `DA3-SMALL` for speed at the cost of metric accuracy).
+
 ## Engine / stack
 
 - **Unreal Engine 5.8** (MechTwin03 project baseline; OSC receiver Blueprint built for this version)
