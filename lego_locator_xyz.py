@@ -181,13 +181,17 @@ class Tracks:
     Pixel centroid is NOT smoothed (position already looks good, and we want it
     responsive); only z and cm are.
     """
-    def __init__(self, alpha=0.25, match_dist=90, max_miss=15):
+    def __init__(self, alpha=0.25, match_dist=90, max_miss=15,
+                 settle_seconds=3.0):
         self.alpha = alpha
         self.match_dist = match_dist
         self.max_miss = max_miss
+        self.settle_seconds = settle_seconds    # a new piece must persist this
+                                                # long before it's "confirmed"
         self.slots = {}                         # colour name -> list of slots
 
     def update(self, color, cx, cy, z, w_cm, h_cm, angle=None, shape=None):
+        now = time.time()
         lst = self.slots.setdefault(color, [])
         best, best_d = None, 1e9
         for s in lst:
@@ -195,11 +199,20 @@ class Tracks:
             if d < best_d:
                 best, best_d = s, d
         if best is None or best_d > self.match_dist:
+            # brand-new piece: start its settle timer, not confirmed yet
             best = {"cx": cx, "cy": cy, "z": z, "w_cm": w_cm, "h_cm": h_cm,
                     "angle": angle, "_phasor": None, "shapes": deque(maxlen=9),
-                    "shape": shape, "miss": 0}
+                    "shape": shape, "miss": 0,
+                    "first_seen": now, "confirmed": False}
             lst.append(best)
         best["cx"], best["cy"], best["miss"] = cx, cy, 0
+        # confirm once it has been seen continuously for settle_seconds. A piece
+        # that leaves for > max_miss frames is dropped by age(), so putting a
+        # new piece in restarts the timer from scratch.
+        best["settle_left"] = max(0.0, self.settle_seconds
+                                  - (now - best["first_seen"]))
+        if not best["confirmed"] and best["settle_left"] <= 0.0:
+            best["confirmed"] = True
         a = self.alpha
         for k, val in (("z", z), ("w_cm", w_cm), ("h_cm", h_cm)):
             if val is None:
@@ -249,6 +262,9 @@ def main():
     ap.add_argument("--osc-port", type=int, default=7000)
     ap.add_argument("--no-floor", action="store_true",
                     help="report camera-frame XYZ instead of floor-frame")
+    ap.add_argument("--settle", type=float, default=3.0,
+                    help="seconds a new piece must persist before it's confirmed "
+                         "and reported/sent (default 3; 0 = instant)")
     args = ap.parse_args()
 
     cap = cv2.VideoCapture(as_source(args.source))
@@ -282,7 +298,7 @@ def main():
     cv2.createTrackbar("Min area/100", win, DEFAULT_MIN_AREA_100, 100, lambda v: None)
 
     t_prev, fps = time.time(), 0.0
-    tracks = Tracks()
+    tracks = Tracks(settle_seconds=args.settle)
 
     while True:
         ok, frame = cap.read()
@@ -317,8 +333,6 @@ def main():
             for ct in pieces[c["name"]]:
                 x, y, w, h = cv2.boundingRect(ct)   # still used to anchor text
                 (u, v), (rw, rh), _ = cv2.minAreaRect(ct)
-                # trace the piece's ACTUAL outline, not a bounding box
-                cv2.drawContours(frame, [ct], -1, c["draw"], 2)
 
                 shape = classify_shape(ct)
                 # A tag whose centre falls inside this blob gives its rotation.
@@ -345,6 +359,21 @@ def main():
                     h_cm_raw = (rh / fy) * z * 100.0
                     slot = tracks.update(c["name"], u, v, z, w_cm_raw, h_cm_raw,
                                          angle, shape)
+                else:
+                    slot = tracks.update(c["name"], u, v, None, None, None,
+                                         angle, shape)
+
+                # While a new piece is settling, draw it dim + show a countdown;
+                # only a CONFIRMED piece (held 3s) is reported and sent to Unreal.
+                if not slot["confirmed"]:
+                    cv2.drawContours(frame, [ct], -1, (150, 150, 150), 1)
+                    cv2.putText(frame, f"scanning {slot['settle_left']:.1f}s",
+                                (x, y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                (150, 150, 150), 2)
+                    continue
+
+                cv2.drawContours(frame, [ct], -1, c["draw"], 2)   # real outline
+                if z is not None:
                     zs, w_cm, h_cm = slot["z"], slot["w_cm"], slot["h_cm"]
                     P_cam = np.array([(u - cx) * zs / fx,
                                       (v - cy) * zs / fy, zs])
@@ -367,8 +396,6 @@ def main():
                                          Y * 1000.0, a_out, w_cm, h_cm,
                                          Zf * 1000.0])
                 else:
-                    slot = tracks.update(c["name"], u, v, None, None, None,
-                                         angle, shape)
                     l1 = f"{c['name']}/{slot['shape']} z=? {int(rw)}x{int(rh)}px"
                     l2 = ""
                 cv2.putText(frame, l1, (x, y - 24), cv2.FONT_HERSHEY_SIMPLEX,
