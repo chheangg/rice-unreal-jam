@@ -543,7 +543,7 @@
       "file_type": "code",
       "norm_label": "as_source()",
       "source_file": "lego_locator.py",
-      "source_location": "L60"
+      "source_location": "L66"
     },
     {
       "id": "lego_locator_classify_shape",
@@ -554,7 +554,7 @@
       "file_type": "code",
       "norm_label": "classify_shape()",
       "source_file": "lego_locator.py",
-      "source_location": "L73"
+      "source_location": "L79"
     },
     {
       "id": "lego_locator_color_mask",
@@ -565,7 +565,7 @@
       "file_type": "code",
       "norm_label": "color_mask()",
       "source_file": "lego_locator.py",
-      "source_location": "L109"
+      "source_location": "L115"
     },
     {
       "id": "lego_locator_find_pieces",
@@ -576,7 +576,7 @@
       "file_type": "code",
       "norm_label": "find_pieces()",
       "source_file": "lego_locator.py",
-      "source_location": "L123"
+      "source_location": "L130"
     },
     {
       "id": "lego_locator_main",
@@ -587,7 +587,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "lego_locator.py",
-      "source_location": "L136"
+      "source_location": "L143"
     },
     {
       "id": "lego_locator_xyz_detect_markers",
@@ -642,7 +642,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L250"
+      "source_location": "L267"
     },
     {
       "id": "lego_locator_xyz_make_aruco",
@@ -664,7 +664,7 @@
       "file_type": "code",
       "norm_label": "resolve_intrinsics()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L239"
+      "source_location": "L256"
     },
     {
       "id": "detect_stereo_find_blobs",
@@ -906,7 +906,7 @@
       "file_type": "code",
       "norm_label": ".age()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L231"
+      "source_location": "L248"
     },
     {
       "id": "lego_locator_xyz_tracks_init",
@@ -928,7 +928,7 @@
       "file_type": "code",
       "norm_label": ".update()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L193"
+      "source_location": "L194"
     },
     {
       "id": "platform_height_platformheightestimator_camera_point_to_world",
@@ -1373,34 +1373,34 @@
       "source_location": "L1"
     },
     {
-      "id": "lego_locator_rationale_110",
+      "id": "lego_locator_rationale_116",
       "label": "Binary mask for one colour: its hue band(s), floored on S and V.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "binary mask for one colour: its hue band(s), floored on s and v.",
       "source_file": "lego_locator.py",
-      "source_location": "L110"
+      "source_location": "L116"
     },
     {
-      "id": "lego_locator_rationale_124",
+      "id": "lego_locator_rationale_131",
       "label": "Return {color_name: [contours]} and {color_name: mask}.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "return {color_name: [contours]} and {color_name: mask}.",
       "source_file": "lego_locator.py",
-      "source_location": "L124"
+      "source_location": "L131"
     },
     {
-      "id": "lego_locator_rationale_74",
+      "id": "lego_locator_rationale_80",
       "label": "Label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'.\u2026",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'....",
       "source_file": "lego_locator.py",
-      "source_location": "L74"
+      "source_location": "L80"
     },
     {
       "id": "lego_locator_xyz_rationale_1",
@@ -1423,14 +1423,14 @@
       "source_location": "L168"
     },
     {
-      "id": "lego_locator_xyz_rationale_240",
+      "id": "lego_locator_xyz_rationale_257",
       "label": "(fx, fy, cx, cy), source_label. Prefer DA3's; else assume an FOV.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "(fx, fy, cx, cy), source_label. prefer da3's; else assume an fov.",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L240"
+      "source_location": "L257"
     },
     {
       "id": "lego_locator_xyz_rationale_65",
@@ -1633,14 +1633,14 @@
       "source_location": "L175"
     },
     {
-      "id": "lego_locator_xyz_rationale_232",
+      "id": "lego_locator_xyz_rationale_249",
       "label": "Drop slots that haven't been matched for a while.",
       "_origin": "ast",
       "community": 8,
       "file_type": "rationale",
       "norm_label": "drop slots that haven't been matched for a while.",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L232"
+      "source_location": "L249"
     },
     {
       "id": "platform_height_rationale_190",
@@ -2302,7 +2302,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L127",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -2314,7 +2314,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L137",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -2326,7 +2326,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L165",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -2338,7 +2338,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L175",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -2350,7 +2350,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L270",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -2362,7 +2362,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L281",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -2374,7 +2374,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L282",
+      "source_location": "L302",
       "weight": 1.0
     },
     {
@@ -2386,7 +2386,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L287",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -2398,7 +2398,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L301",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -2410,7 +2410,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L310",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -2422,7 +2422,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L317",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -2434,7 +2434,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L329",
+      "source_location": "L349",
       "weight": 1.0
     },
     {
@@ -2446,7 +2446,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L337",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
@@ -3088,7 +3088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L109",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -3099,7 +3099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L123",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -3110,7 +3110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L136",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -3121,7 +3121,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L60",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -3132,7 +3132,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L73",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -3154,7 +3154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L239",
+      "source_location": "L256",
       "weight": 1.0
     },
     {
@@ -3165,7 +3165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L250",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -3572,7 +3572,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L193",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -3583,7 +3583,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L231",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -3983,36 +3983,36 @@
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_110",
+      "source": "lego_locator_rationale_116",
       "target": "lego_locator_color_mask",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L110",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_124",
+      "source": "lego_locator_rationale_131",
       "target": "lego_locator_find_pieces",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L124",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_74",
+      "source": "lego_locator_rationale_80",
       "target": "lego_locator_classify_shape",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L74",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -4049,25 +4049,25 @@
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_232",
+      "source": "lego_locator_xyz_rationale_249",
       "target": "lego_locator_xyz_tracks_age",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L232",
+      "source_location": "L249",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_240",
+      "source": "lego_locator_xyz_rationale_257",
       "target": "lego_locator_xyz_resolve_intrinsics",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L240",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -4466,5 +4466,5 @@
       "source_file": "tasks/README.md"
     }
   ],
-  "built_at_commit": "3e301085dd8cf637ed9d3ff2c26bf87b49e92b6f"
+  "built_at_commit": "ef9b46f0086ef2d6907c09e114cf723efc669121"
 }
