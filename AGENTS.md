@@ -25,6 +25,12 @@ things are headed.
 - **Requesting work from someone (or some agent):** don't ask in passing —
   drop a file in `/tasks` (see `tasks/README.md` for the format). That's the
   single place to check for "what does someone want me to do."
+- **"Tell evan ..." / any note addressed to someone who isn't you:** write it
+  as a task file in `/tasks`, then **commit and push it immediately, without
+  waiting to be asked.** The whole point is that the addressed person sees it
+  on their end — a local, unpushed file doesn't do that. This is standing
+  authorization to `git add`/`commit`/`push` for `/tasks` changes specifically;
+  it does not extend to other files or to force-pushes/history rewrites.
 - **Roadmap / direction questions:** check `docs/ROADMAP.md` first before
   asking; update it when priorities shift instead of letting it go stale.
 - **How to run anything:** `README.md` is the source of truth. If you had to
