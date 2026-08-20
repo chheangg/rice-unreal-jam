@@ -57,28 +57,16 @@
       "source_location": "L32"
     },
     {
-      "id": "lego_locator_xyz_tracks",
-      "label": "Tracks",
+      "id": "lego_locator_xyz_floorframe",
+      "label": "FloorFrame",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 2,
       "file_type": "code",
-      "norm_label": "tracks",
+      "norm_label": "floorframe",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L50"
-    },
-    {
-      "id": "detect_platform_slot",
-      "label": "Slot",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "slot",
-      "source_file": "detect_platform.py",
-      "source_location": "L165"
+      "source_location": "L98"
     },
     {
       "id": "side_height_sideheightestimator",
@@ -86,11 +74,23 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "sideheightestimator",
       "source_file": "side_height.py",
       "source_location": "L47"
+    },
+    {
+      "id": "detect_platform_slot",
+      "label": "Slot",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "norm_label": "slot",
+      "source_file": "detect_platform.py",
+      "source_location": "L165"
     },
     {
       "id": "send_test_fakeblock",
@@ -103,6 +103,18 @@
       "norm_label": "fakeblock",
       "source_file": "send_test.py",
       "source_location": "L54"
+    },
+    {
+      "id": "lego_locator_xyz_tracks",
+      "label": "Tracks",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "code",
+      "norm_label": "tracks",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L174"
     },
     {
       "id": "detect_platform_aruco_ema",
@@ -171,6 +183,50 @@
       "source_location": "L123"
     },
     {
+      "id": "detect_platform_find_blobs",
+      "label": "find_blobs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "code",
+      "norm_label": "find_blobs()",
+      "source_file": "detect_platform.py",
+      "source_location": "L109"
+    },
+    {
+      "id": "detect_platform_load_or_guess_intrinsics",
+      "label": "load_or_guess_intrinsics()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "code",
+      "norm_label": "load_or_guess_intrinsics()",
+      "source_file": "detect_platform.py",
+      "source_location": "L139"
+    },
+    {
+      "id": "detect_platform_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "detect_platform.py",
+      "source_location": "L287"
+    },
+    {
+      "id": "detect_platform_send_and_draw",
+      "label": "send_and_draw()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "code",
+      "norm_label": "send_and_draw()",
+      "source_file": "detect_platform.py",
+      "source_location": "L270"
+    },
+    {
       "id": "platform_height_classify_corners",
       "label": "_classify_corners()",
       "_callable": true,
@@ -215,17 +271,6 @@
       "source_location": "L230"
     },
     {
-      "id": "platform_height_platformheightestimator_camera_point_to_world",
-      "label": ".camera_point_to_world()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "code",
-      "norm_label": ".camera_point_to_world()",
-      "source_file": "platform_height.py",
-      "source_location": "L214"
-    },
-    {
       "id": "platform_height_platformheightestimator_init",
       "label": ".__init__()",
       "_callable": true,
@@ -235,17 +280,6 @@
       "norm_label": ".__init__()",
       "source_file": "platform_height.py",
       "source_location": "L149"
-    },
-    {
-      "id": "platform_height_platformheightestimator_point3d_mm",
-      "label": ".point3d_mm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "code",
-      "norm_label": ".point3d_mm()",
-      "source_file": "platform_height.py",
-      "source_location": "L189"
     },
     {
       "id": "platform_height_solve_marker_camera_point",
@@ -424,11 +458,44 @@
       "source_location": "L72"
     },
     {
+      "id": "platform_height_platformheightestimator_ground_xy_mm",
+      "label": ".ground_xy_mm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "norm_label": ".ground_xy_mm()",
+      "source_file": "platform_height.py",
+      "source_location": "L170"
+    },
+    {
+      "id": "platform_height_platformheightestimator_ray_world",
+      "label": "._ray_world()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "norm_label": "._ray_world()",
+      "source_file": "platform_height.py",
+      "source_location": "L160"
+    },
+    {
+      "id": "calibrate_iphone_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "calibrate_iphone.py",
+      "source_location": "L53"
+    },
+    {
       "id": "calibrate_table_pose_main",
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "calibrate_table_pose.py",
@@ -439,7 +506,7 @@
       "label": "find_blobs()",
       "_callable": true,
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "norm_label": "find_blobs()",
       "source_file": "detect.py",
@@ -450,7 +517,7 @@
       "label": "send()",
       "_callable": true,
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "norm_label": "send()",
       "source_file": "detect.py",
@@ -461,7 +528,7 @@
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "generate_aruco_tags.py",
@@ -476,7 +543,18 @@
       "file_type": "code",
       "norm_label": "as_source()",
       "source_file": "lego_locator.py",
-      "source_location": "L59"
+      "source_location": "L60"
+    },
+    {
+      "id": "lego_locator_classify_shape",
+      "label": "classify_shape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "code",
+      "norm_label": "classify_shape()",
+      "source_file": "lego_locator.py",
+      "source_location": "L72"
     },
     {
       "id": "lego_locator_color_mask",
@@ -487,7 +565,7 @@
       "file_type": "code",
       "norm_label": "color_mask()",
       "source_file": "lego_locator.py",
-      "source_location": "L66"
+      "source_location": "L102"
     },
     {
       "id": "lego_locator_find_pieces",
@@ -498,7 +576,7 @@
       "file_type": "code",
       "norm_label": "find_pieces()",
       "source_file": "lego_locator.py",
-      "source_location": "L80"
+      "source_location": "L116"
     },
     {
       "id": "lego_locator_main",
@@ -509,7 +587,51 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "lego_locator.py",
-      "source_location": "L93"
+      "source_location": "L129"
+    },
+    {
+      "id": "lego_locator_xyz_detect_markers",
+      "label": "detect_markers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "code",
+      "norm_label": "detect_markers()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L78"
+    },
+    {
+      "id": "lego_locator_xyz_floorframe_fit",
+      "label": ".fit()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "code",
+      "norm_label": ".fit()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L113"
+    },
+    {
+      "id": "lego_locator_xyz_floorframe_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L107"
+    },
+    {
+      "id": "lego_locator_xyz_floorframe_to_floor",
+      "label": ".to_floor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "code",
+      "norm_label": ".to_floor()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L167"
     },
     {
       "id": "lego_locator_xyz_main",
@@ -520,7 +642,18 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L104"
+      "source_location": "L237"
+    },
+    {
+      "id": "lego_locator_xyz_make_aruco",
+      "label": "make_aruco()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "code",
+      "norm_label": "make_aruco()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L64"
     },
     {
       "id": "lego_locator_xyz_resolve_intrinsics",
@@ -531,146 +664,14 @@
       "file_type": "code",
       "norm_label": "resolve_intrinsics()",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L93"
-    },
-    {
-      "id": "lego_locator_xyz_tracks_age",
-      "label": ".age()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "file_type": "code",
-      "norm_label": ".age()",
-      "source_file": "lego_locator_xyz.py",
-      "source_location": "L85"
-    },
-    {
-      "id": "lego_locator_xyz_tracks_init",
-      "label": ".__init__()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "lego_locator_xyz.py",
-      "source_location": "L60"
-    },
-    {
-      "id": "lego_locator_xyz_tracks_update",
-      "label": ".update()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "file_type": "code",
-      "norm_label": ".update()",
-      "source_file": "lego_locator_xyz.py",
-      "source_location": "L66"
-    },
-    {
-      "id": "detect_platform_ema",
-      "label": "_ema()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "_ema()",
-      "source_file": "detect_platform.py",
-      "source_location": "L161"
-    },
-    {
-      "id": "detect_platform_find_blobs",
-      "label": "find_blobs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "find_blobs()",
-      "source_file": "detect_platform.py",
-      "source_location": "L109"
-    },
-    {
-      "id": "detect_platform_load_or_guess_intrinsics",
-      "label": "load_or_guess_intrinsics()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "load_or_guess_intrinsics()",
-      "source_file": "detect_platform.py",
-      "source_location": "L139"
-    },
-    {
-      "id": "detect_platform_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "detect_platform.py",
-      "source_location": "L287"
-    },
-    {
-      "id": "detect_platform_send_and_draw",
-      "label": "send_and_draw()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "send_and_draw()",
-      "source_file": "detect_platform.py",
-      "source_location": "L270"
-    },
-    {
-      "id": "detect_platform_slot_compute_xyz",
-      "label": ".compute_xyz()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": ".compute_xyz()",
-      "source_file": "detect_platform.py",
-      "source_location": "L228"
-    },
-    {
-      "id": "detect_platform_slot_init",
-      "label": ".__init__()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "detect_platform.py",
-      "source_location": "L170"
-    },
-    {
-      "id": "detect_platform_slot_reset_lock",
-      "label": "._reset_lock()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "._reset_lock()",
-      "source_file": "detect_platform.py",
-      "source_location": "L185"
-    },
-    {
-      "id": "detect_platform_slot_update",
-      "label": ".update()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": ".update()",
-      "source_file": "detect_platform.py",
-      "source_location": "L195"
+      "source_location": "L226"
     },
     {
       "id": "detect_stereo_find_blobs",
       "label": "find_blobs()",
       "_callable": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "find_blobs()",
       "source_file": "detect_stereo.py",
@@ -681,7 +682,7 @@
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "detect_stereo.py",
@@ -692,7 +693,7 @@
       "label": "match_by_rank()",
       "_callable": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "match_by_rank()",
       "source_file": "detect_stereo.py",
@@ -703,7 +704,7 @@
       "label": "send_and_draw()",
       "_callable": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "send_and_draw()",
       "source_file": "detect_stereo.py",
@@ -714,7 +715,7 @@
       "label": ".height_mm()",
       "_callable": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": ".height_mm()",
       "source_file": "side_height.py",
@@ -725,11 +726,66 @@
       "label": ".__init__()",
       "_callable": true,
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": ".__init__()",
       "source_file": "side_height.py",
       "source_location": "L48"
+    },
+    {
+      "id": "detect_platform_ema",
+      "label": "_ema()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "norm_label": "_ema()",
+      "source_file": "detect_platform.py",
+      "source_location": "L161"
+    },
+    {
+      "id": "detect_platform_slot_compute_xyz",
+      "label": ".compute_xyz()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "norm_label": ".compute_xyz()",
+      "source_file": "detect_platform.py",
+      "source_location": "L228"
+    },
+    {
+      "id": "detect_platform_slot_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "detect_platform.py",
+      "source_location": "L170"
+    },
+    {
+      "id": "detect_platform_slot_reset_lock",
+      "label": "._reset_lock()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "norm_label": "._reset_lock()",
+      "source_file": "detect_platform.py",
+      "source_location": "L185"
+    },
+    {
+      "id": "detect_platform_slot_update",
+      "label": ".update()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "norm_label": ".update()",
+      "source_file": "detect_platform.py",
+      "source_location": "L195"
     },
     {
       "id": "camera_probe_as_source",
@@ -842,37 +898,69 @@
       "source_location": "L47"
     },
     {
-      "id": "platform_height_platformheightestimator_ground_xy_mm",
-      "label": ".ground_xy_mm()",
+      "id": "lego_locator_xyz_tracks_age",
+      "label": ".age()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
       "file_type": "code",
-      "norm_label": ".ground_xy_mm()",
-      "source_file": "platform_height.py",
-      "source_location": "L170"
+      "norm_label": ".age()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L218"
     },
     {
-      "id": "platform_height_platformheightestimator_ray_world",
-      "label": "._ray_world()",
+      "id": "lego_locator_xyz_tracks_init",
+      "label": ".__init__()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
       "file_type": "code",
-      "norm_label": "._ray_world()",
-      "source_file": "platform_height.py",
-      "source_location": "L160"
+      "norm_label": ".__init__()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L184"
     },
     {
-      "id": "calibrate_iphone_main",
-      "label": "main()",
+      "id": "lego_locator_xyz_tracks_update",
+      "label": ".update()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "code",
+      "norm_label": ".update()",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L190"
+    },
+    {
+      "id": "platform_height_platformheightestimator_camera_point_to_world",
+      "label": ".camera_point_to_world()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "calibrate_iphone.py",
-      "source_location": "L53"
+      "norm_label": ".camera_point_to_world()",
+      "source_file": "platform_height.py",
+      "source_location": "L214"
+    },
+    {
+      "id": "platform_height_platformheightestimator_point3d_mm",
+      "label": ".point3d_mm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "file_type": "code",
+      "norm_label": ".point3d_mm()",
+      "source_file": "platform_height.py",
+      "source_location": "L189"
+    },
+    {
+      "id": "detect_platform",
+      "label": "detect_platform.py",
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "code",
+      "norm_label": "detect_platform.py",
+      "source_file": "detect_platform.py",
+      "source_location": "L1"
     },
     {
       "id": "detect_platform_aruco",
@@ -915,6 +1003,16 @@
       "source_location": "L101"
     },
     {
+      "id": "detect_platform_rationale_1",
+      "label": "detect_platform.py \u2014 single-camera (DJI, angled ~45 deg) tracker with real,\u2026",
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "rationale",
+      "norm_label": "detect_platform.py \u2014 single-camera (dji, angled ~45 deg) tracker with real,...",
+      "source_file": "detect_platform.py",
+      "source_location": "L1"
+    },
+    {
       "id": "platform_height_rationale_1",
       "label": "platform_height.py \u2014 real-world X/Y/Z for a block seen by a SINGLE angled\u2026",
       "_origin": "ast",
@@ -943,26 +1041,6 @@
       "norm_label": "real x/y/z for pixels in the dji frame, given a solved platform pose.",
       "source_file": "platform_height.py",
       "source_location": "L147"
-    },
-    {
-      "id": "platform_height_rationale_190",
-      "label": "Approximate full 3D point (X, Y, Z) in mm for a block's CENTER pixel (cx, cy),\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "rationale",
-      "norm_label": "approximate full 3d point (x, y, z) in mm for a block's center pixel (cx, cy),...",
-      "source_file": "platform_height.py",
-      "source_location": "L190"
-    },
-    {
-      "id": "platform_height_rationale_215",
-      "label": "Transform a 3D point already expressed in CAMERA space into platform-world\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "rationale",
-      "norm_label": "transform a 3d point already expressed in camera space into platform-world...",
-      "source_file": "platform_height.py",
-      "source_location": "L215"
     },
     {
       "id": "platform_height_rationale_231",
@@ -1135,10 +1213,50 @@
       "source_location": "L1"
     },
     {
+      "id": "platform_height_rationale_161",
+      "label": "Undistorted camera ray through pixel (px,py), as a WORLD-space direction vector\u2026",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "rationale",
+      "norm_label": "undistorted camera ray through pixel (px,py), as a world-space direction vector...",
+      "source_file": "platform_height.py",
+      "source_location": "L161"
+    },
+    {
+      "id": "platform_height_rationale_171",
+      "label": "EXACT real-world (X, Y) in mm, platform-relative, for a pixel that lies ON the\u2026",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "rationale",
+      "norm_label": "exact real-world (x, y) in mm, platform-relative, for a pixel that lies on the...",
+      "source_file": "platform_height.py",
+      "source_location": "L171"
+    },
+    {
+      "id": "calibrate_iphone",
+      "label": "calibrate_iphone.py",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "norm_label": "calibrate_iphone.py",
+      "source_file": "calibrate_iphone.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "calibrate_iphone_rationale_1",
+      "label": "calibrate_iphone.py \u2014 one-time intrinsics calibration for the SIDE camera (the\u2026",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "rationale",
+      "norm_label": "calibrate_iphone.py \u2014 one-time intrinsics calibration for the side camera (the...",
+      "source_file": "calibrate_iphone.py",
+      "source_location": "L1"
+    },
+    {
       "id": "calibrate_table_pose",
       "label": "calibrate_table_pose.py",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "norm_label": "calibrate_table_pose.py",
       "source_file": "calibrate_table_pose.py",
@@ -1148,7 +1266,7 @@
       "id": "calibrate_table_pose_rationale_1",
       "label": "calibrate_table_pose.py \u2014 step 2 of 2 for real height tracking. Finds the\u2026",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "rationale",
       "norm_label": "calibrate_table_pose.py \u2014 step 2 of 2 for real height tracking. finds the...",
       "source_file": "calibrate_table_pose.py",
@@ -1158,7 +1276,7 @@
       "id": "detect",
       "label": "detect.py",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "norm_label": "detect.py",
       "source_file": "detect.py",
@@ -1168,7 +1286,7 @@
       "id": "generate_aruco_tags",
       "label": "generate_aruco_tags.py",
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "generate_aruco_tags.py",
       "source_file": "generate_aruco_tags.py",
@@ -1178,7 +1296,7 @@
       "id": "generate_aruco_tags_rationale_1",
       "label": "generate_aruco_tags.py \u2014 generates printable ArUco tags of an EXACTLY known\u2026",
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "rationale",
       "norm_label": "generate_aruco_tags.py \u2014 generates printable aruco tags of an exactly known...",
       "source_file": "generate_aruco_tags.py",
@@ -1188,7 +1306,7 @@
       "id": "github_scripts_graphify_ci_build",
       "label": "graphify_ci_build.py",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "norm_label": "graphify_ci_build.py",
       "source_file": ".github/scripts/graphify_ci_build.py",
@@ -1198,7 +1316,7 @@
       "id": "github_scripts_graphify_ci_build_rationale_1",
       "label": "Code-only graphify rebuild for CI. No LLM key available here, so semantic\u2026",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "rationale",
       "norm_label": "code-only graphify rebuild for ci. no llm key available here, so semantic...",
       "source_file": ".github/scripts/graphify_ci_build.py",
@@ -1208,7 +1326,7 @@
       "id": "inspect_bp",
       "label": "inspect_bp.py",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "norm_label": "inspect_bp.py",
       "source_file": "inspect_bp.py",
@@ -1218,7 +1336,7 @@
       "id": "inspect_bp_rationale_1",
       "label": "inspect_bp.py -- Deep probe of graph accessibility. Run: py \"H:/Unreal + Ai\u2026",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "rationale",
       "norm_label": "inspect_bp.py -- deep probe of graph accessibility. run: py \"h:/unreal + ai...",
       "source_file": "inspect_bp.py",
@@ -1255,24 +1373,34 @@
       "source_location": "L1"
     },
     {
-      "id": "lego_locator_rationale_67",
+      "id": "lego_locator_rationale_103",
       "label": "Binary mask for one colour: its hue band(s), floored on S and V.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "binary mask for one colour: its hue band(s), floored on s and v.",
       "source_file": "lego_locator.py",
-      "source_location": "L67"
+      "source_location": "L103"
     },
     {
-      "id": "lego_locator_rationale_81",
+      "id": "lego_locator_rationale_117",
       "label": "Return {color_name: [contours]} and {color_name: mask}.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "return {color_name: [contours]} and {color_name: mask}.",
       "source_file": "lego_locator.py",
-      "source_location": "L81"
+      "source_location": "L117"
+    },
+    {
+      "id": "lego_locator_rationale_73",
+      "label": "Label a piece contour as 'square', 'circle', 'cross', or '?'. Two features do\u2026",
+      "_origin": "ast",
+      "community": 2,
+      "file_type": "rationale",
+      "norm_label": "label a piece contour as 'square', 'circle', 'cross', or '?'. two features do...",
+      "source_file": "lego_locator.py",
+      "source_location": "L73"
     },
     {
       "id": "lego_locator_xyz_rationale_1",
@@ -1285,100 +1413,60 @@
       "source_location": "L1"
     },
     {
-      "id": "lego_locator_xyz_rationale_51",
-      "label": "Tiny per-colour tracker so a stationary piece reports a STEADY size/depth\u2026",
+      "id": "lego_locator_xyz_rationale_168",
+      "label": "Camera 3D point -> (X_floor, Y_floor, height) in meters.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
-      "norm_label": "tiny per-colour tracker so a stationary piece reports a steady size/depth...",
+      "norm_label": "camera 3d point -> (x_floor, y_floor, height) in meters.",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L51"
+      "source_location": "L168"
     },
     {
-      "id": "lego_locator_xyz_rationale_86",
-      "label": "Drop slots that haven't been matched for a while.",
-      "_origin": "ast",
-      "community": 2,
-      "file_type": "rationale",
-      "norm_label": "drop slots that haven't been matched for a while.",
-      "source_file": "lego_locator_xyz.py",
-      "source_location": "L86"
-    },
-    {
-      "id": "lego_locator_xyz_rationale_94",
+      "id": "lego_locator_xyz_rationale_227",
       "label": "(fx, fy, cx, cy), source_label. Prefer DA3's; else assume an FOV.",
       "_origin": "ast",
       "community": 2,
       "file_type": "rationale",
       "norm_label": "(fx, fy, cx, cy), source_label. prefer da3's; else assume an fov.",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L94"
+      "source_location": "L227"
     },
     {
-      "id": "detect_platform",
-      "label": "detect_platform.py",
+      "id": "lego_locator_xyz_rationale_65",
+      "label": "ArUco detector that works on old and new OpenCV (5.x dropped legacy).",
       "_origin": "ast",
-      "community": 3,
-      "file_type": "code",
-      "norm_label": "detect_platform.py",
-      "source_file": "detect_platform.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "detect_platform_rationale_1",
-      "label": "detect_platform.py \u2014 single-camera (DJI, angled ~45 deg) tracker with real,\u2026",
-      "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "file_type": "rationale",
-      "norm_label": "detect_platform.py \u2014 single-camera (dji, angled ~45 deg) tracker with real,...",
-      "source_file": "detect_platform.py",
-      "source_location": "L1"
+      "norm_label": "aruco detector that works on old and new opencv (5.x dropped legacy).",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L65"
     },
     {
-      "id": "detect_platform_rationale_166",
-      "label": "One persistent tracked object: locks onto a blob, holds its last known value\u2026",
+      "id": "lego_locator_xyz_rationale_79",
+      "label": "Return [(center_xy, angle_deg, corners)] for every tag found.",
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "file_type": "rationale",
-      "norm_label": "one persistent tracked object: locks onto a blob, holds its last known value...",
-      "source_file": "detect_platform.py",
-      "source_location": "L166"
+      "norm_label": "return [(center_xy, angle_deg, corners)] for every tag found.",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L79"
     },
     {
-      "id": "detect_platform_rationale_186",
-      "label": "Drop the current lock and all smoothing state, so the slot can cleanly re-\u2026",
+      "id": "lego_locator_xyz_rationale_99",
+      "label": "Surface-agnostic ground frame fitted from the depth point cloud with RANSAC -\u2026",
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "file_type": "rationale",
-      "norm_label": "drop the current lock and all smoothing state, so the slot can cleanly re-...",
-      "source_file": "detect_platform.py",
-      "source_location": "L186"
-    },
-    {
-      "id": "detect_platform_rationale_196",
-      "label": "candidates: list of blob dicts, mutated (matched ones removed).",
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "rationale",
-      "norm_label": "candidates: list of blob dicts, mutated (matched ones removed).",
-      "source_file": "detect_platform.py",
-      "source_location": "L196"
-    },
-    {
-      "id": "detect_platform_rationale_229",
-      "label": "Real (x_mm, y_mm, z_mm), smoothed and clamped to the platform's physical\u2026",
-      "_origin": "ast",
-      "community": 3,
-      "file_type": "rationale",
-      "norm_label": "real (x_mm, y_mm, z_mm), smoothed and clamped to the platform's physical...",
-      "source_file": "detect_platform.py",
-      "source_location": "L229"
+      "norm_label": "surface-agnostic ground frame fitted from the depth point cloud with ransac -...",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L99"
     },
     {
       "id": "detect_stereo",
       "label": "detect_stereo.py",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "detect_stereo.py",
       "source_file": "detect_stereo.py",
@@ -1388,7 +1476,7 @@
       "id": "side_height",
       "label": "side_height.py",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "code",
       "norm_label": "side_height.py",
       "source_file": "side_height.py",
@@ -1398,7 +1486,7 @@
       "id": "detect_stereo_rationale_1",
       "label": "detect_stereo.py \u2014 two-camera tracker: DJI (top-down) gives X/Y, iPhone (side)\u2026",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "rationale",
       "norm_label": "detect_stereo.py \u2014 two-camera tracker: dji (top-down) gives x/y, iphone (side)...",
       "source_file": "detect_stereo.py",
@@ -1408,7 +1496,7 @@
       "id": "detect_stereo_rationale_68",
       "label": "Pair top-view blocks with side-view blobs by left-to-right rank. Returns\u2026",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "rationale",
       "norm_label": "pair top-view blocks with side-view blobs by left-to-right rank. returns...",
       "source_file": "detect_stereo.py",
@@ -1418,7 +1506,7 @@
       "id": "side_height_rationale_1",
       "label": "side_height.py \u2014 real (geometric) height-above-table for a block seen by the\u2026",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "rationale",
       "norm_label": "side_height.py \u2014 real (geometric) height-above-table for a block seen by the...",
       "source_file": "side_height.py",
@@ -1428,11 +1516,51 @@
       "id": "side_height_rationale_79",
       "label": "Real height (mm) above the table for a block detected at pixel center (cx, cy)\u2026",
       "_origin": "ast",
-      "community": 5,
+      "community": 4,
       "file_type": "rationale",
       "norm_label": "real height (mm) above the table for a block detected at pixel center (cx, cy)...",
       "source_file": "side_height.py",
       "source_location": "L79"
+    },
+    {
+      "id": "detect_platform_rationale_166",
+      "label": "One persistent tracked object: locks onto a blob, holds its last known value\u2026",
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "rationale",
+      "norm_label": "one persistent tracked object: locks onto a blob, holds its last known value...",
+      "source_file": "detect_platform.py",
+      "source_location": "L166"
+    },
+    {
+      "id": "detect_platform_rationale_186",
+      "label": "Drop the current lock and all smoothing state, so the slot can cleanly re-\u2026",
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "rationale",
+      "norm_label": "drop the current lock and all smoothing state, so the slot can cleanly re-...",
+      "source_file": "detect_platform.py",
+      "source_location": "L186"
+    },
+    {
+      "id": "detect_platform_rationale_196",
+      "label": "candidates: list of blob dicts, mutated (matched ones removed).",
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "rationale",
+      "norm_label": "candidates: list of blob dicts, mutated (matched ones removed).",
+      "source_file": "detect_platform.py",
+      "source_location": "L196"
+    },
+    {
+      "id": "detect_platform_rationale_229",
+      "label": "Real (x_mm, y_mm, z_mm), smoothed and clamped to the platform's physical\u2026",
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "rationale",
+      "norm_label": "real (x_mm, y_mm, z_mm), smoothed and clamped to the platform's physical...",
+      "source_file": "detect_platform.py",
+      "source_location": "L229"
     },
     {
       "id": "camera_probe",
@@ -1495,51 +1623,51 @@
       "source_location": "L55"
     },
     {
-      "id": "platform_height_rationale_161",
-      "label": "Undistorted camera ray through pixel (px,py), as a WORLD-space direction vector\u2026",
+      "id": "lego_locator_xyz_rationale_175",
+      "label": "Tiny per-colour tracker so a stationary piece reports a STEADY size/depth\u2026",
       "_origin": "ast",
       "community": 8,
       "file_type": "rationale",
-      "norm_label": "undistorted camera ray through pixel (px,py), as a world-space direction vector...",
-      "source_file": "platform_height.py",
-      "source_location": "L161"
+      "norm_label": "tiny per-colour tracker so a stationary piece reports a steady size/depth...",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L175"
     },
     {
-      "id": "platform_height_rationale_171",
-      "label": "EXACT real-world (X, Y) in mm, platform-relative, for a pixel that lies ON the\u2026",
+      "id": "lego_locator_xyz_rationale_219",
+      "label": "Drop slots that haven't been matched for a while.",
       "_origin": "ast",
       "community": 8,
       "file_type": "rationale",
-      "norm_label": "exact real-world (x, y) in mm, platform-relative, for a pixel that lies on the...",
-      "source_file": "platform_height.py",
-      "source_location": "L171"
+      "norm_label": "drop slots that haven't been matched for a while.",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L219"
     },
     {
-      "id": "calibrate_iphone",
-      "label": "calibrate_iphone.py",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "norm_label": "calibrate_iphone.py",
-      "source_file": "calibrate_iphone.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "calibrate_iphone_rationale_1",
-      "label": "calibrate_iphone.py \u2014 one-time intrinsics calibration for the SIDE camera (the\u2026",
+      "id": "platform_height_rationale_190",
+      "label": "Approximate full 3D point (X, Y, Z) in mm for a block's CENTER pixel (cx, cy),\u2026",
       "_origin": "ast",
       "community": 9,
       "file_type": "rationale",
-      "norm_label": "calibrate_iphone.py \u2014 one-time intrinsics calibration for the side camera (the...",
-      "source_file": "calibrate_iphone.py",
-      "source_location": "L1"
+      "norm_label": "approximate full 3d point (x, y, z) in mm for a block's center pixel (cx, cy),...",
+      "source_file": "platform_height.py",
+      "source_location": "L190"
+    },
+    {
+      "id": "platform_height_rationale_215",
+      "label": "Transform a 3D point already expressed in CAMERA space into platform-world\u2026",
+      "_origin": "ast",
+      "community": 9,
+      "file_type": "rationale",
+      "norm_label": "transform a 3d point already expressed in camera space into platform-world...",
+      "source_file": "platform_height.py",
+      "source_location": "L215"
     },
     {
       "id": "mt03_realtimelayout_saved_shaderdebuginfo_pcd3d_sm6_worldgridmaterial_67bacdd81a65e5e9_default_ddckey_editor_worldgridmaterial",
       "label": "WorldGridMaterial Shader (DDC Key)",
       "author": null,
       "captured_at": null,
-      "community": 15,
+      "community": 17,
       "contributor": null,
       "file_type": "code",
       "norm_label": "worldgridmaterial shader (ddc key)",
@@ -1552,7 +1680,7 @@
       "label": "Digital Twin Scene Screenshot",
       "author": null,
       "captured_at": null,
-      "community": 15,
+      "community": 17,
       "contributor": null,
       "file_type": "image",
       "norm_label": "digital twin scene screenshot",
@@ -1565,7 +1693,7 @@
       "label": "detect.py",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "code",
       "norm_label": "detect.py",
@@ -1578,7 +1706,7 @@
       "label": "inspect_bp.py",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "code",
       "norm_label": "inspect_bp.py",
@@ -1591,7 +1719,7 @@
       "label": "send_test.py",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "code",
       "norm_label": "send_test.py",
@@ -1604,7 +1732,7 @@
       "label": "Git LFS Usage",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "concept",
       "norm_label": "git lfs usage",
@@ -1617,7 +1745,7 @@
       "label": "MechTwin03",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "concept",
       "norm_label": "mechtwin03",
@@ -1630,7 +1758,7 @@
       "label": "MT03_RealTimeLayout (Unreal Project)",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "concept",
       "norm_label": "mt03_realtimelayout (unreal project)",
@@ -1643,7 +1771,7 @@
       "label": "OSC Protocol Link",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "concept",
       "norm_label": "osc protocol link",
@@ -1656,7 +1784,7 @@
       "label": "Task Lifecycle (Open/In progress/Done)",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "concept",
       "norm_label": "task lifecycle (open/in progress/done)",
@@ -1669,7 +1797,7 @@
       "label": "Task File Fields (status/requested-by/assigned-to/date/What/Why/Notes)",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "concept",
       "norm_label": "task file fields (status/requested-by/assigned-to/date/what/why/notes)",
@@ -1682,7 +1810,7 @@
       "label": "AGENTS.md",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "document",
       "norm_label": "agents.md",
@@ -1695,7 +1823,7 @@
       "label": "tasks/README.md",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "document",
       "norm_label": "tasks/readme.md",
@@ -1708,7 +1836,7 @@
       "label": "tasks/TEMPLATE.md",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "document",
       "norm_label": "tasks/template.md",
@@ -1721,7 +1849,7 @@
       "label": "Roadmap-Update Practice",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "roadmap-update practice",
@@ -1734,7 +1862,7 @@
       "label": "Task-Filing Collaboration Practice",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "task-filing collaboration practice",
@@ -1747,7 +1875,7 @@
       "label": "File-Instead-of-Ask Practice",
       "author": null,
       "captured_at": null,
-      "community": 4,
+      "community": 3,
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "file-instead-of-ask practice",
@@ -2174,7 +2302,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L84",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_main",
+      "target": "lego_locator_as_source",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "lego_locator.py",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -2186,19 +2326,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator.py",
-      "source_location": "L122",
-      "weight": 1.0
-    },
-    {
-      "source": "lego_locator_main",
-      "target": "lego_locator_as_source",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "lego_locator.py",
-      "source_location": "L94",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -2210,7 +2338,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L115",
+      "source_location": "L254",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_main",
+      "target": "lego_locator_xyz_make_aruco",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L265",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_main",
+      "target": "lego_locator_xyz_floorframe",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -2222,7 +2374,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L122",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -2234,7 +2386,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L136",
+      "source_location": "L285",
       "weight": 1.0
     },
     {
@@ -2246,7 +2398,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L145",
+      "source_location": "L294",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_main",
+      "target": "lego_locator_xyz_detect_markers",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -2258,7 +2422,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L152",
+      "source_location": "L313",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_main",
+      "target": "lego_locator_classify_shape",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L322",
       "weight": 1.0
     },
     {
@@ -2462,7 +2638,19 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L45",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz",
+      "target": "lego_locator_classify_shape",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -2474,7 +2662,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L45",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -2486,7 +2674,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L47",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -2546,7 +2734,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L45",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -2558,7 +2746,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L47",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -2882,24 +3070,13 @@
     },
     {
       "source": "lego_locator",
-      "target": "lego_locator_as_source",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lego_locator.py",
-      "source_location": "L59",
-      "weight": 1.0
-    },
-    {
-      "source": "lego_locator",
       "target": "lego_locator_color_mask",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L66",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -2910,7 +3087,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L80",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -2921,18 +3098,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L93",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz",
-      "target": "lego_locator_xyz_main",
+      "source": "lego_locator",
+      "target": "lego_locator_as_source",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "lego_locator_xyz.py",
-      "source_location": "L104",
+      "source_file": "lego_locator.py",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator",
+      "target": "lego_locator_classify_shape",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator.py",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -2943,7 +3131,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L50",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -2954,7 +3142,51 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L93",
+      "source_location": "L226",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz",
+      "target": "lego_locator_xyz_main",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L237",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz",
+      "target": "lego_locator_xyz_make_aruco",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz",
+      "target": "lego_locator_xyz_detect_markers",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz",
+      "target": "lego_locator_xyz_floorframe",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -3277,6 +3509,39 @@
       "weight": 1.0
     },
     {
+      "source": "lego_locator_xyz_floorframe",
+      "target": "lego_locator_xyz_floorframe_init",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_floorframe",
+      "target": "lego_locator_xyz_floorframe_fit",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_floorframe",
+      "target": "lego_locator_xyz_floorframe_to_floor",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L167",
+      "weight": 1.0
+    },
+    {
       "source": "lego_locator_xyz_tracks",
       "target": "lego_locator_xyz_tracks_init",
       "relation": "method",
@@ -3284,7 +3549,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L60",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -3295,7 +3560,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L66",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -3306,7 +3571,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L85",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -3706,25 +3971,36 @@
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_67",
+      "source": "lego_locator_rationale_103",
       "target": "lego_locator_color_mask",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L67",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_rationale_81",
+      "source": "lego_locator_rationale_117",
       "target": "lego_locator_find_pieces",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator.py",
-      "source_location": "L81",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_rationale_73",
+      "target": "lego_locator_classify_shape",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator.py",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -3739,36 +4015,80 @@
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_51",
+      "source": "lego_locator_xyz_rationale_168",
+      "target": "lego_locator_xyz_floorframe_to_floor",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L168",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_rationale_175",
       "target": "lego_locator_xyz_tracks",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L51",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_86",
+      "source": "lego_locator_xyz_rationale_219",
       "target": "lego_locator_xyz_tracks_age",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L86",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
-      "source": "lego_locator_xyz_rationale_94",
+      "source": "lego_locator_xyz_rationale_227",
       "target": "lego_locator_xyz_resolve_intrinsics",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lego_locator_xyz.py",
-      "source_location": "L94",
+      "source_location": "L227",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_rationale_65",
+      "target": "lego_locator_xyz_make_aruco",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_rationale_79",
+      "target": "lego_locator_xyz_detect_markers",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "lego_locator_xyz_rationale_99",
+      "target": "lego_locator_xyz_floorframe",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lego_locator_xyz.py",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -4134,5 +4454,5 @@
       "source_file": "tasks/README.md"
     }
   ],
-  "built_at_commit": "adc9cf4f6ab96d15b5c13a9945925e8898585d5d"
+  "built_at_commit": "f23a1bba593d719e76c6c8e841d7f1ec023fb499"
 }
