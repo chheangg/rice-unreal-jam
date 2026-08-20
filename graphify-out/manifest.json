@@ -1,254 +1,254 @@
 {
   "MT03_RealTimeLayout/Saved/Autosaves/PackageRestoreData.json": {
-    "mtime": 1787257715.686305,
-    "seen": 1787257726.6677597,
+    "mtime": 1787258241.8909862,
+    "seen": 1787258257.2982488,
     "ast_hash": "c64929eb22596d00594ac4ca25e1c7b7",
     "semantic_hash": "c64929eb22596d00594ac4ca25e1c7b7"
   },
   "MT03_RealTimeLayout/Saved/Config/WorldState/3222581562.json": {
-    "mtime": 1787257715.6865685,
-    "seen": 1787257726.6677616,
+    "mtime": 1787258241.891531,
+    "seen": 1787258257.2982516,
     "ast_hash": "4d031d5184c3590cdfdce9f28e97fb53",
     "semantic_hash": "4d031d5184c3590cdfdce9f28e97fb53"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.50.json": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.6677635,
+    "mtime": 1787258241.898531,
+    "seen": 1787258257.298253,
     "ast_hash": "5ffffc0973094b8cd78b037bc8d5a39a",
     "semantic_hash": "5ffffc0973094b8cd78b037bc8d5a39a"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.51.json": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.667765,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.298255,
     "ast_hash": "0c2fe38013f52f76778aa942ed8d1812",
     "semantic_hash": "0c2fe38013f52f76778aa942ed8d1812"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.52.json": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.6677663,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.2982562,
     "ast_hash": "791387bd9a2f268279ef076117d9e5ea",
     "semantic_hash": "791387bd9a2f268279ef076117d9e5ea"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo.json": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.6677673,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.2982576,
     "ast_hash": "2571bccf6dccfba35db65f2f014ecaed",
     "semantic_hash": "2571bccf6dccfba35db65f2f014ecaed"
   },
   "MT03_RealTimeLayout/Saved/SourceControl/UncontrolledChangelists.json": {
-    "mtime": 1787257715.7805688,
-    "seen": 1787257726.6677687,
+    "mtime": 1787258241.9835312,
+    "seen": 1787258257.2982595,
     "ast_hash": "5b9092234b604105c1b46e407be36a56",
     "semantic_hash": "5b9092234b604105c1b46e407be36a56"
   },
   "detect.py": {
-    "mtime": 1787257715.9835696,
-    "seen": 1787257726.6677716,
-    "ast_hash": "1a33f5c60dd5aaf84ca456b707134a1f",
-    "semantic_hash": "1a33f5c60dd5aaf84ca456b707134a1f"
+    "mtime": 1787258242.2105317,
+    "seen": 1787258257.2982624,
+    "ast_hash": "bf8336d2d3df960644816990d074ad37",
+    "semantic_hash": "bf8336d2d3df960644816990d074ad37"
   },
   "inspect_bp.py": {
-    "mtime": 1787257715.9848044,
-    "seen": 1787257726.667774,
+    "mtime": 1787258242.212581,
+    "seen": 1787258257.298265,
     "ast_hash": "e182a1b2ca08a51f8b8ce43339bc28c5",
     "semantic_hash": "e182a1b2ca08a51f8b8ce43339bc28c5"
   },
   "send_test.py": {
-    "mtime": 1787257717.2895746,
-    "seen": 1787257726.667775,
+    "mtime": 1787258243.6475346,
+    "seen": 1787258257.2982666,
     "ast_hash": "0312fa43800d90bbb83a963b4ae8a208",
     "semantic_hash": "0312fa43800d90bbb83a963b4ae8a208"
   },
   "AGENTS.md": {
-    "mtime": 1787257715.1188166,
-    "seen": 1787257726.6677775,
+    "mtime": 1787258241.413255,
+    "seen": 1787258257.2982697,
     "ast_hash": "0b90e60fdfe4708142651470c8c5b551",
     "semantic_hash": "0b90e60fdfe4708142651470c8c5b551"
   },
   "MT03_RealTimeLayout/Intermediate/PipInstall/extra_urls.txt": {
-    "mtime": 1787257715.6821928,
-    "seen": 1787257726.667779,
+    "mtime": 1787258241.8862643,
+    "seen": 1787258257.2982712,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "MT03_RealTimeLayout/Saved/Crashes/UECC-Windows-A2EAEEAD452ADC7901FF13BA50B010D2_0000/Slate.txt": {
-    "mtime": 1787257715.6925685,
-    "seen": 1787257726.6677804,
+    "mtime": 1787258241.8965309,
+    "seen": 1787258257.2982728,
     "ast_hash": "18f6c676d578c43617d55bc4ee2dd2be",
     "semantic_hash": "18f6c676d578c43617d55bc4ee2dd2be"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.50.txt": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.6677818,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.298274,
     "ast_hash": "18770cff6b94208681b23c9c15c7f246",
     "semantic_hash": "18770cff6b94208681b23c9c15c7f246"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.51.txt": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.6677833,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.2982755,
     "ast_hash": "571f382666549f6e6414d50897ae76df",
     "semantic_hash": "571f382666549f6e6414d50897ae76df"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo-backup-2026.06.23-17.52.52.txt": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.6677847,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.2982771,
     "ast_hash": "a37454066667e3144e8ff1814548b4c5",
     "semantic_hash": "a37454066667e3144e8ff1814548b4c5"
   },
   "MT03_RealTimeLayout/Saved/Logs/AutoSDKInfo.txt": {
-    "mtime": 1787257715.6945686,
-    "seen": 1787257726.667786,
+    "mtime": 1787258241.8992908,
+    "seen": 1787258257.2982786,
     "ast_hash": "c9ec7a02ff3f634b31cd0d752cfcacb6",
     "semantic_hash": "c9ec7a02ff3f634b31cd0d752cfcacb6"
   },
   "MT03_RealTimeLayout/Saved/ShaderDebugInfo/PCD3D_SM6/WorldGridMaterial_67bacdd81a65e5e9/Default/DDCKey-Editor.txt": {
-    "mtime": 1787257715.7805688,
-    "seen": 1787257726.6677873,
+    "mtime": 1787258241.9835312,
+    "seen": 1787258257.2982807,
     "ast_hash": "2b3cb3ff2d61b2fc46c1e71984086f98",
     "semantic_hash": "2b3cb3ff2d61b2fc46c1e71984086f98"
   },
   "README.md": {
-    "mtime": 1787257715.7805688,
-    "seen": 1787257726.6677883,
-    "ast_hash": "ea993ebd46bcaaad7a39ea41b432f688",
-    "semantic_hash": "ea993ebd46bcaaad7a39ea41b432f688"
+    "mtime": 1787258241.9835312,
+    "seen": 1787258257.2982821,
+    "ast_hash": "db4b1f42f41f95496e0397a65e5d2b3d",
+    "semantic_hash": "db4b1f42f41f95496e0397a65e5d2b3d"
   },
   "docs/ROADMAP.md": {
-    "mtime": 1787257715.9835696,
-    "seen": 1787257726.6677895,
+    "mtime": 1787258242.2105317,
+    "seen": 1787258257.2982833,
     "ast_hash": "6fcff387f239a48c82ea8b59324f4d57",
     "semantic_hash": "6fcff387f239a48c82ea8b59324f4d57"
   },
   "tasks/README.md": {
-    "mtime": 1787257717.2895746,
-    "seen": 1787257726.667791,
+    "mtime": 1787258243.6475346,
+    "seen": 1787258257.2982845,
     "ast_hash": "2c62c1c6439e4f8c7b206be0255d3e0e",
     "semantic_hash": "2c62c1c6439e4f8c7b206be0255d3e0e"
   },
   "tasks/TEMPLATE.md": {
-    "mtime": 1787257717.2900538,
-    "seen": 1787257726.667792,
+    "mtime": 1787258243.6486921,
+    "seen": 1787258257.2982857,
     "ast_hash": "253208255fb91872f56d00d72c56b3c2",
     "semantic_hash": "253208255fb91872f56d00d72c56b3c2"
   },
   "MT03_RealTimeLayout/Saved/AutoScreenshot.png": {
-    "mtime": 1787257715.6823852,
-    "seen": 1787257726.667793,
+    "mtime": 1787258241.8865685,
+    "seen": 1787258257.298287,
     "ast_hash": "4beb355ea9667cac8538d17943e51b48",
     "semantic_hash": "4beb355ea9667cac8538d17943e51b48"
   },
   ".github/scripts/graphify_ci_build.py": {
-    "mtime": 1787257715.1188166,
-    "seen": 1787257726.6677551,
+    "mtime": 1787258241.413255,
+    "seen": 1787258257.298243,
     "ast_hash": "ea8ddae997cdf77a722c0984048992a8",
     "semantic_hash": "ea8ddae997cdf77a722c0984048992a8"
   },
   ".github/workflows/graphify.yml": {
-    "mtime": 1787257715.1188166,
-    "seen": 1787257726.6677763,
+    "mtime": 1787258241.413255,
+    "seen": 1787258257.2982683,
     "ast_hash": "68f6befc05a6488cf966b2706601d2b1",
     "semantic_hash": "68f6befc05a6488cf966b2706601d2b1"
   },
   "Video/Curbi - Kill The Lights (feat. Sarah de Warren) [Monstercat Lyric Video].mp3": {
-    "mtime": 1787257715.794569,
-    "seen": 1787257726.6677945,
+    "mtime": 1787258241.9965312,
+    "seen": 1787258257.2982883,
     "ast_hash": "d19747ba7c797c383b804ad311f2d8fd",
     "semantic_hash": "d19747ba7c797c383b804ad311f2d8fd"
   },
   "Video/IMG_1053.MOV": {
-    "mtime": 1787257715.9515696,
-    "seen": 1787257726.6677957,
+    "mtime": 1787258242.1755316,
+    "seen": 1787258257.2982898,
     "ast_hash": "491981cd487656b08bd36cf6e10a0be0",
     "semantic_hash": "491981cd487656b08bd36cf6e10a0be0"
   },
   "Video/IMG_1054.MOV": {
-    "mtime": 1787257715.9805696,
-    "seen": 1787257726.6677969,
+    "mtime": 1787258242.2085316,
+    "seen": 1787258257.2982907,
     "ast_hash": "f1228793d9dc41148107e2ccdea58373",
     "semantic_hash": "f1228793d9dc41148107e2ccdea58373"
   },
   "mt03 outputs/IMG_0999.mp4": {
-    "mtime": 1787257716.5525718,
-    "seen": 1787257726.667798,
+    "mtime": 1787258242.7905328,
+    "seen": 1787258257.298292,
     "ast_hash": "4f1987b89eeed3541fb0b00aa560e781",
     "semantic_hash": "4f1987b89eeed3541fb0b00aa560e781"
   },
   "mt03 outputs/Mt03 cp1 Basic Movement.mp4": {
-    "mtime": 1787257716.6555722,
-    "seen": 1787257726.6677997,
+    "mtime": 1787258242.905533,
+    "seen": 1787258257.2982934,
     "ast_hash": "5ae80201b6f0e98612e4bee07d4f61a1",
     "semantic_hash": "5ae80201b6f0e98612e4bee07d4f61a1"
   },
   "mt03 outputs/Mt03 cp2 rotation&size.mp4": {
-    "mtime": 1787257716.8185728,
-    "seen": 1787257726.667801,
+    "mtime": 1787258243.0855334,
+    "seen": 1787258257.2982945,
     "ast_hash": "2a3c9bfc06c9b717e4a25624e4144513",
     "semantic_hash": "2a3c9bfc06c9b717e4a25624e4144513"
   },
   "mt03 outputs/Recordings/Earth People - Dance (Club Mix) 1989 0.mp3": {
-    "mtime": 1787257716.856573,
-    "seen": 1787257726.667802,
+    "mtime": 1787258243.1215336,
+    "seen": 1787258257.2982957,
     "ast_hash": "2fd47ec4c369d6fd4775a394e66c7085",
     "semantic_hash": "2fd47ec4c369d6fd4775a394e66c7085"
   },
   "mt03 outputs/Recordings/IMG_0997.MOV": {
-    "mtime": 1787257716.9805734,
-    "seen": 1787257726.6678038,
+    "mtime": 1787258243.255534,
+    "seen": 1787258257.298297,
     "ast_hash": "3549b60e4ef1161e6241aca7dea9739e",
     "semantic_hash": "3549b60e4ef1161e6241aca7dea9739e"
   },
   "mt03 outputs/Recordings/IMG_0997.mp4": {
-    "mtime": 1787257717.0355737,
-    "seen": 1787257726.6678047,
+    "mtime": 1787258243.325534,
+    "seen": 1787258257.2982981,
     "ast_hash": "d6c92b43521c0729006a46764e886cd6",
     "semantic_hash": "d6c92b43521c0729006a46764e886cd6"
   },
   "mt03 outputs/Recordings/IMG_0998.MOV": {
-    "mtime": 1787257717.129574,
-    "seen": 1787257726.6678061,
+    "mtime": 1787258243.4415343,
+    "seen": 1787258257.298299,
     "ast_hash": "03733c213af08ba0c95eb635f229e1a0",
     "semantic_hash": "03733c213af08ba0c95eb635f229e1a0"
   },
   "mt03 outputs/Recordings/IMG_0998.mp4": {
-    "mtime": 1787257717.168574,
-    "seen": 1787257726.6678073,
+    "mtime": 1787258243.4925344,
+    "seen": 1787258257.2983005,
     "ast_hash": "cf9f64e53eb96b4c48d7606836d4944b",
     "semantic_hash": "cf9f64e53eb96b4c48d7606836d4944b"
   },
   "mt03 outputs/Recordings/IMG_0999.MOV": {
-    "mtime": 1787257717.2125745,
-    "seen": 1787257726.6678085,
+    "mtime": 1787258243.5505345,
+    "seen": 1787258257.2983017,
     "ast_hash": "2ef560ea4afc2ffd9a1ce9255655808c",
     "semantic_hash": "2ef560ea4afc2ffd9a1ce9255655808c"
   },
   "mt03 outputs/Recordings/IMG_0999.mp4": {
-    "mtime": 1787257717.2285745,
-    "seen": 1787257726.66781,
+    "mtime": 1787258243.5695345,
+    "seen": 1787258257.2983027,
     "ast_hash": "65a182468abb165ea26e976c230082d7",
     "semantic_hash": "65a182468abb165ea26e976c230082d7"
   },
   "mt03 outputs/Recordings/IMG_1001.MOV": {
-    "mtime": 1787257717.2735746,
-    "seen": 1787257726.6678112,
+    "mtime": 1787258243.6285346,
+    "seen": 1787258257.298304,
     "ast_hash": "1fa7b86229f6b41d010fee5ee782149e",
     "semantic_hash": "1fa7b86229f6b41d010fee5ee782149e"
   },
   "mt03 outputs/Recordings/IMG_1001.mp4": {
-    "mtime": 1787257717.2865746,
-    "seen": 1787257726.6678123,
+    "mtime": 1787258243.6465347,
+    "seen": 1787258257.2983053,
     "ast_hash": "070c189414dd17c8903f1a8f61ac1343",
     "semantic_hash": "070c189414dd17c8903f1a8f61ac1343"
   },
   "depth_estimator.py": {
-    "mtime": 1787257715.9835696,
-    "seen": 1787257726.6677701,
+    "mtime": 1787258242.2105317,
+    "seen": 1787258257.2982607,
     "ast_hash": "743631b635a361d789ef3c7eb05eeb8d",
     "semantic_hash": "743631b635a361d789ef3c7eb05eeb8d"
   },
   "detect_xyz.py": {
-    "mtime": 1787257715.9835696,
-    "seen": 1787257726.6677728,
-    "ast_hash": "e9ea1c9f46054e32bbcab7dbbf066674",
-    "semantic_hash": "e9ea1c9f46054e32bbcab7dbbf066674"
+    "mtime": 1787258242.2105317,
+    "seen": 1787258257.2982635,
+    "ast_hash": "e40a230a28f9eb4f614eed1dc3062d26",
+    "semantic_hash": "e40a230a28f9eb4f614eed1dc3062d26"
   }
 }
