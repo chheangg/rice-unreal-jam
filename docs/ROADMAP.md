@@ -122,17 +122,27 @@ layer in one script.
   its centre, so colour says *what* + *where* (blob centroid), tag says
   *which instance* + *how turned*. Detector code works on both old and new
   (`ArucoDetector`) OpenCV.
-- **Snapping**: position quantised to a `GRID`, rotation to `ANGLE_STEP` (90°),
-  each with a hysteresis deadband (`SNAP_MARGIN`, `ANGLE_MARGIN`) so jitter
-  doesn't twitch shapes between cells. Two shapes placed near each other land
-  on the *same* lattice → they line up and combine cleanly ("snap"). A faint
-  grid overlay shows the lattice. Set `GRID` to match your Lego stud size and
-  the Unreal grid (remember the **÷50** scale divisor).
+- **Board-frame snapping (fixes the angled-camera problem)**: a slightly
+  angled top-down camera does *not* see the Lego lattice aligned to its pixel
+  grid — the board is rotated/perspective-warped on screen, so pixel-space
+  snapping snaps to the wrong lattice. Fix: tape **4 ArUco corner tags**
+  (ids 0=TL,1=TR,2=BR,3=BL) at the table corners; a homography maps camera
+  pixels → a flat, axis-aligned board grid measured in *cells*
+  (`BOARD_COLS`×`BOARD_ROWS`). Positions and angles are transformed into that
+  frame and snapped there (integer cell + 0/90/180/270), with hysteresis
+  deadbands (`SNAP_MARGIN`, `ANGLE_MARGIN`) so jitter doesn't twitch cells.
+  Camera is fixed → the homography is cached, so it survives a corner tag
+  being briefly occluded. The rectified grid is drawn back onto the frame as
+  visual confirmation. Because x,y are already grid cells, Unreal places at
+  `x,y * cellSize` — **no ÷50 needed** in this path.
+- **Depth (z)**: folds in `depth_estimator.py` (Depth Anything 3) sampled at
+  each shape's camera-space box, so every shape carries metric z. Runs on a
+  background thread; `USE_DEPTH=False` to skip it for max FPS.
 - **OSC** (one message per shape, avoids the multi-message race noted below):
-  `/shape [id, x, y, angle, shape, color]`; a `/shape_gone [id]` fires when a
-  tracked shape disappears so Unreal can despawn it. This replaces the old
+  `/shape [id, x, y, z, angle, shape, color]`; a `/shape_gone [id]` fires when
+  a tracked shape disappears so Unreal can despawn it. This replaces the old
   `/obj` switch-on-colour layout — build the ID-based receiver against it
-  (Next-action #4).
+  (Next-action #4). Shape tags use ids ≥ 4 (0–3 are reserved for corners).
 
 ## Engine / stack
 

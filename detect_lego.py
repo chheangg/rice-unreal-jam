@@ -1,38 +1,45 @@
 """
-detect_lego.py — combined COLOR + ArUco Lego shape tracker with SNAPPING.
+detect_lego.py — COLOR + ArUco Lego tracker, snapping in a rectified BOARD
+frame, with depth (z).
 
-This is the "combined color + ArUco detection" step from docs/ROADMAP.md,
-plus the snap-to-grid "wow" layer so shapes combine cleanly.
+Why a board frame?
+------------------
+A slightly-angled top-down camera does NOT see the Lego lattice aligned to
+its pixel grid: the whole board is rotated (and a bit perspective-warped)
+relative to the screen. Snapping in pixel space therefore snaps to the wrong
+lattice — pieces that are physically adjacent land in non-adjacent screen
+cells, and "straight" pieces read as odd angles.
 
-The doc's core idea:
-  - 5 Lego colours, each colour = one pre-built shape (L, U, T, I, Z ...).
-    Colour tells you WHAT the shape is (+ gives its outline/centre).
-  - One ArUco tag per shape gives a stable ID and TRUE 0-360 rotation
-    (no minAreaRect 180 ambiguity, no size-sort reshuffling, no flicker).
-  - Pair them: the tag sitting inside a colour blob => that blob's shape,
-    its stable id, and its rotation.
+Fix: tape 4 ArUco tags at the table corners. We compute a homography that
+maps camera pixels onto a flat, axis-aligned board grid measured in *cells*.
+Everything — positions and angles — is transformed into that board frame and
+snapped there, so snapping lines up with the real Lego grid regardless of how
+the camera is tilted/rotated. The camera is fixed, so the homography is
+essentially constant: we compute it whenever all 4 corners are visible and
+cache it, staying robust if a corner tag is briefly occluded.
 
-Why snapping:
-  Lego lives on a grid at right angles. We quantise each shape's position to
-  a grid and its rotation to 90 deg, with hysteresis (a deadband) so small
-  jitter doesn't make it twitch between cells. Result: place two shapes near
-  each other and they land on the SAME lattice -> in Unreal they line up and
-  "snap" together instead of floating at slightly-off angles.
+Per shape we output: stable id, board cell (x,y), metric depth (z), snapped
+angle (board-relative), shape label, colour.
 
-OSC (address /shape, one message per shape per frame — per the doc's note
-about avoiding multi-message race conditions, each shape is its own message):
-    [id, x, y, angle, shape, color]
-    id     : ArUco tag id (stable per shape)
-    x, y   : SNAPPED pixel centre (Unreal divides by the scale divisor, ÷50)
-    angle  : SNAPPED rotation, 0/90/180/270
-    shape  : shape label for this colour ("L", "U", ...)
-    color  : colour name ("red", ...)
-When a shape that was being tracked disappears, one /shape_gone [id] is sent
-so the Unreal side can despawn it.
+OSC (one message per shape — avoids the multi-message race noted in the doc):
+    /shape       [id, x, y, z, angle, shape, color]
+    /shape_gone  [id]                      (fired when a tracked shape leaves)
+  x, y   : SNAPPED board cell coordinates (integers). In Unreal, place at
+           x,y * your cell size — no ÷50 needed, this is already grid space.
+  z      : metric depth in meters from Depth Anything 3 (smaller = closer to
+           the camera). -1.0 if depth is unavailable.
+  angle  : SNAPPED board-relative rotation, 0/90/180/270.
+
+Setup:
+  - Print ArUco tags from DICT_4X4_50.
+  - Tag ids 0,1,2,3 are the board corners: 0=top-left, 1=top-right,
+    2=bottom-right, 3=bottom-left. Tape them flat at the table corners.
+  - Give every shape its own tag with id >= 4.
+  - Set BOARD_COLS / BOARD_ROWS to how many grid cells span the taped
+    rectangle (this defines the snap lattice).
+  - Tune the COLORS HSV ranges with the tuner in docs/ROADMAP.md.
 
 Run:  python detect_lego.py      (Esc to quit)
-Tune: adjust COLORS ranges with the HSV tuner in docs/ROADMAP.md, then set
-      GRID / ANGLE_STEP to match your Lego stud size on screen.
 """
 
 import cv2
@@ -40,16 +47,26 @@ import numpy as np
 import math
 from pythonosc.udp_client import SimpleUDPClient
 
+from depth_estimator import DepthEstimator
+
 # ======================================================================
-# CONFIG — tune this block for your lighting / Lego set / grid.
+# CONFIG
 # ======================================================================
 OSC_IP, OSC_PORT = "127.0.0.1", 7000
-CAM_INDEX = 0                 # try 1 / 2 for an external / DJI cam
+CAM_INDEX = 0
+CAP_W, CAP_H = 1280, 720        # cap capture res for real-time margin (0,0 = default)
 
-# One entry per Lego colour. hsv is a LIST of (low, high) ranges so colours
-# that wrap around the hue circle (red) can use two ranges. `shape` is the
-# pre-built shape that colour always forms; `draw` is just the overlay colour.
-# ---> Replace these ranges with numbers from the ROADMAP HSV tuner. <---
+# Board corner tags (reserved ids) and how many grid cells span the board.
+CORNER_IDS = {0: "TL", 1: "TR", 2: "BR", 3: "BL"}   # tag id -> corner role
+BOARD_COLS = 16                 # cells across (width)  -> snap lattice
+BOARD_ROWS = 12                 # cells down   (height)
+FIRST_SHAPE_ID = 4              # shape tags must use ids >= this
+
+USE_DEPTH = True                # set False to skip Depth Anything (faster)
+
+# One entry per Lego colour: colour -> its pre-built shape. hsv is a LIST of
+# (low, high) ranges (red wraps the hue circle, so it uses two).
+# ---> Replace ranges with numbers from the ROADMAP HSV tuner. <---
 COLORS = [
     {"name": "red",    "shape": "L", "draw": (0, 0, 255),
      "hsv": [((0, 120, 90), (8, 255, 255)), ((170, 120, 90), (179, 255, 255))]},
@@ -63,23 +80,22 @@ COLORS = [
      "hsv": [((95, 90, 70), (130, 255, 255))]},
 ]
 
-MIN_AREA = 800               # ignore colour blobs smaller than this (px^2)
-BLUR = 5                     # gaussian blur kernel to calm colour noise (odd)
+MIN_AREA = 800                  # ignore colour blobs smaller than this (px^2)
+BLUR = 5                        # gaussian blur to calm colour noise (odd)
 
-GRID = 40                    # px per grid cell — set to your Lego stud size
-SNAP_MARGIN = 0.35           # 0..0.5 : extra distance past a cell before it jumps
-ANGLE_STEP = 90              # Lego snaps to right angles
-ANGLE_MARGIN = 15            # deg past the 45 boundary before angle flips
+SNAP_MARGIN = 0.35              # 0..0.5 : extra distance past a cell before it jumps
+ANGLE_STEP = 90                 # Lego snaps to right angles
+ANGLE_MARGIN = 15              # deg past the 45 boundary before angle flips
+GONE_FRAMES = 12               # frames unseen before /shape_gone
 
-GONE_FRAMES = 12             # frames a shape can be unseen before /shape_gone
-
-ARUCO_DICT = "DICT_4X4_50"   # print tags from this dictionary
+ARUCO_DICT = "DICT_4X4_50"
+Z_MISSING = -1.0
 # ======================================================================
 
 osc = SimpleUDPClient(OSC_IP, OSC_PORT)
 
 
-# ---- ArUco: build a detector that works on old AND new OpenCV -----------
+# ---- ArUco: detector that works on old AND new OpenCV --------------------
 def make_aruco():
     a = cv2.aruco
     dic = a.getPredefinedDictionary(getattr(a, ARUCO_DICT))
@@ -104,18 +120,51 @@ def detect_markers(gray, aruco_state):
     if ids is None:
         return out
     for c, i in zip(corners, ids.flatten()):
-        pts = c.reshape(4, 2)                      # TL, TR, BR, BL
+        pts = c.reshape(4, 2)                      # TL, TR, BR, BL of the tag
         cx, cy = pts.mean(axis=0)
-        tl, tr = pts[0], pts[1]
-        angle = math.degrees(math.atan2(tr[1] - tl[1], tr[0] - tl[0])) % 360
-        out.append({"id": int(i), "cx": float(cx), "cy": float(cy),
-                    "angle": angle, "pts": pts})
+        out.append({"id": int(i), "cx": float(cx), "cy": float(cy), "pts": pts})
     return out
+
+
+# ---- homography (camera px -> board cells) ------------------------------
+BOARD_DST = {
+    "TL": (0, 0), "TR": (BOARD_COLS, 0),
+    "BR": (BOARD_COLS, BOARD_ROWS), "BL": (0, BOARD_ROWS),
+}
+
+
+def compute_homography(markers):
+    """If all 4 corner tags are visible, return H (px->cells), else None."""
+    src, dst = [], []
+    seen = {}
+    for m in markers:
+        role = CORNER_IDS.get(m["id"])
+        if role:
+            seen[role] = (m["cx"], m["cy"])
+    if len(seen) < 4:
+        return None
+    for role in ("TL", "TR", "BR", "BL"):
+        src.append(seen[role])
+        dst.append(BOARD_DST[role])
+    return cv2.getPerspectiveTransform(np.array(src, np.float32),
+                                       np.array(dst, np.float32))
+
+
+def warp(H, x, y):
+    p = cv2.perspectiveTransform(np.array([[[x, y]]], np.float32), H)
+    return float(p[0, 0, 0]), float(p[0, 0, 1])
+
+
+def board_angle(H, m):
+    """Marker orientation expressed in the board frame, 0..360."""
+    tl, tr = m["pts"][0], m["pts"][1]              # top edge direction in px
+    c = warp(H, m["cx"], m["cy"])
+    tip = warp(H, m["cx"] + (tr[0] - tl[0]), m["cy"] + (tr[1] - tl[1]))
+    return math.degrees(math.atan2(tip[1] - c[1], tip[0] - c[0])) % 360
 
 
 # ---- colour blobs -------------------------------------------------------
 def color_blobs(hsv):
-    """Return {color_name: [contour, ...]} for blobs above MIN_AREA."""
     kernel = np.ones((5, 5), np.uint8)
     found = {}
     for c in COLORS:
@@ -123,7 +172,6 @@ def color_blobs(hsv):
         for lo, hi in c["hsv"]:
             m = cv2.inRange(hsv, np.array(lo), np.array(hi))
             mask = m if mask is None else (mask | m)
-        # clean the mask: close small holes, drop specks
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -134,7 +182,6 @@ def color_blobs(hsv):
 
 
 def blob_for_point(blobs, px, py):
-    """Which colour/contour contains point (px,py)? -> (color_dict, contour)."""
     for c in COLORS:
         for ct in blobs.get(c["name"], []):
             if cv2.pointPolygonTest(ct, (float(px), float(py)), False) >= 0:
@@ -142,13 +189,12 @@ def blob_for_point(blobs, px, py):
     return None, None
 
 
-# ---- snapping (per shape id), with hysteresis so it holds steady --------
-def _snap_pos(v, cur):
-    cell = v / GRID
+# ---- snapping (in board-cell units), with hysteresis --------------------
+def _snap_cell(v, cur):
     if cur is None:
-        return round(cell) * GRID
-    if abs(cell - cur / GRID) > (0.5 + SNAP_MARGIN):   # past deadband -> jump
-        return round(cell) * GRID
+        return round(v)
+    if abs(v - cur) > (0.5 + SNAP_MARGIN):         # past deadband -> jump
+        return round(v)
     return cur
 
 
@@ -156,7 +202,7 @@ def _snap_angle(a, cur):
     nearest = (round(a / ANGLE_STEP) * ANGLE_STEP) % 360
     if cur is None:
         return nearest
-    d = ((a - cur + 180) % 360) - 180                  # signed diff to current
+    d = ((a - cur + 180) % 360) - 180
     if abs(d) > (ANGLE_STEP / 2 + ANGLE_MARGIN):
         return nearest
     return cur
@@ -168,11 +214,23 @@ class ShapeState:
         self.unseen = 0
 
     def snap(self, x, y, a):
-        self.x = _snap_pos(x, self.x)
-        self.y = _snap_pos(y, self.y)
+        self.x = _snap_cell(x, self.x)
+        self.y = _snap_cell(y, self.y)
         self.a = _snap_angle(a, self.a)
         self.unseen = 0
         return int(self.x), int(self.y), int(self.a)
+
+
+def draw_board_grid(frame, H):
+    """Draw the rectified cell grid back onto the frame (visual confirmation)."""
+    Hinv = np.linalg.inv(H)
+    col = (70, 70, 70)
+    for i in range(BOARD_COLS + 1):
+        a = warp(Hinv, i, 0); b = warp(Hinv, i, BOARD_ROWS)
+        cv2.line(frame, (int(a[0]), int(a[1])), (int(b[0]), int(b[1])), col, 1)
+    for j in range(BOARD_ROWS + 1):
+        a = warp(Hinv, 0, j); b = warp(Hinv, BOARD_COLS, j)
+        cv2.line(frame, (int(a[0]), int(a[1])), (int(b[0]), int(b[1])), col, 1)
 
 
 def main():
@@ -180,71 +238,96 @@ def main():
     if not cap.isOpened():
         print("Camera not found — try CAM_INDEX 1 or 2")
         return
+    if CAP_W and CAP_H:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAP_W)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAP_H)
+
     aruco_state = make_aruco()
-    states = {}                                        # id -> ShapeState
+    depth = DepthEstimator() if USE_DEPTH else None
+    if depth:
+        depth.start()
+    states = {}
+    H_cached = None                                # last good homography
 
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        if BLUR >= 3:
-            frame = cv2.GaussianBlur(frame, (BLUR, BLUR), 0)
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    try:
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            if depth:
+                depth.submit(frame)               # feed the depth worker (raw frame)
+            work = cv2.GaussianBlur(frame, (BLUR, BLUR), 0) if BLUR >= 3 else frame
+            hsv = cv2.cvtColor(work, cv2.COLOR_BGR2HSV)
+            gray = cv2.cvtColor(work, cv2.COLOR_BGR2GRAY)
 
-        blobs = color_blobs(hsv)
-        markers = detect_markers(gray, aruco_state)
+            markers = detect_markers(gray, aruco_state)
+            H = compute_homography(markers)
+            if H is not None:
+                H_cached = H
+            H = H_cached                          # use cached if corners hidden
 
-        seen_ids = set()
-        for mk in markers:
-            color, ct = blob_for_point(blobs, mk["cx"], mk["cy"])
-            if color is None:
-                continue                               # tag not on any shape
-            M = cv2.moments(ct)                         # shape centroid = anchor
-            if M["m00"] == 0:
-                continue
-            cx = M["m10"] / M["m00"]
-            cy = M["m01"] / M["m00"]
+            blobs = color_blobs(hsv)
+            seen_ids = set()
 
-            st = states.setdefault(mk["id"], ShapeState())
-            sx, sy, sa = st.snap(cx, cy, mk["angle"])
-            seen_ids.add(mk["id"])
+            if H is None:
+                cv2.putText(frame, "Show all 4 corner tags (ids 0-3) to lock the board",
+                            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            else:
+                draw_board_grid(frame, H)
+                for mk in markers:
+                    if mk["id"] < FIRST_SHAPE_ID:     # skip corner tags
+                        continue
+                    color, ct = blob_for_point(blobs, mk["cx"], mk["cy"])
+                    if color is None:
+                        continue
+                    M = cv2.moments(ct)
+                    if M["m00"] == 0:
+                        continue
+                    cx, cy = M["m10"] / M["m00"], M["m01"] / M["m00"]   # centroid (px)
 
-            osc.send_message("/shape", [mk["id"], sx, sy, sa,
-                                        color["shape"], color["name"]])
+                    bx, by = warp(H, cx, cy)          # -> board cell space
+                    ang = board_angle(H, mk)
+                    st = states.setdefault(mk["id"], ShapeState())
+                    sx, sy, sa = st.snap(bx, by, ang)
+                    seen_ids.add(mk["id"])
 
-            # overlay
-            cv2.drawContours(frame, [ct], -1, color["draw"], 2)
-            cv2.circle(frame, (sx, sy), 4, color["draw"], -1)
-            end = (int(sx + 30 * math.cos(math.radians(sa))),
-                   int(sy + 30 * math.sin(math.radians(sa))))
-            cv2.arrowedLine(frame, (sx, sy), end, color["draw"], 2)
-            cv2.putText(frame, f"#{mk['id']} {color['shape']}/{color['name']} {sa}deg",
-                        (sx + 8, sy - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        color["draw"], 2)
+                    z = depth.depth_at(cv2.boundingRect(ct)) if depth else None
+                    z_val = Z_MISSING if z is None else round(z, 3)
 
-        # despawn shapes that have been gone too long
-        for sid in list(states):
-            if sid in seen_ids:
-                continue
-            states[sid].unseen += 1
-            if states[sid].unseen > GONE_FRAMES:
-                osc.send_message("/shape_gone", [sid])
-                del states[sid]
+                    osc.send_message("/shape", [mk["id"], sx, sy, z_val, sa,
+                                                color["shape"], color["name"]])
 
-        # faint grid so you can see the lattice everything snaps to
-        h, w = frame.shape[:2]
-        for gx in range(0, w, GRID):
-            cv2.line(frame, (gx, 0), (gx, h), (60, 60, 60), 1)
-        for gy in range(0, h, GRID):
-            cv2.line(frame, (0, gy), (w, gy), (60, 60, 60), 1)
+                    cv2.drawContours(frame, [ct], -1, color["draw"], 2)
+                    cv2.circle(frame, (int(cx), int(cy)), 4, color["draw"], -1)
+                    cv2.putText(frame,
+                                f"#{mk['id']} {color['shape']}/{color['name']} "
+                                f"({sx},{sy}) {sa}d z={z_val}",
+                                (int(cx) + 8, int(cy) - 8),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color["draw"], 2)
 
-        cv2.imshow("Lego shapes (color + ArUco, snapped)", frame)
-        if cv2.waitKey(1) == 27:
-            break
+            # despawn shapes gone too long
+            for sid in list(states):
+                if sid in seen_ids:
+                    continue
+                states[sid].unseen += 1
+                if states[sid].unseen > GONE_FRAMES:
+                    osc.send_message("/shape_gone", [sid])
+                    del states[sid]
 
-    cap.release()
-    cv2.destroyAllWindows()
+            if depth:
+                s = "DEPTH on" if depth.available and depth.has_depth() else \
+                    ("DEPTH loading" if depth.available else "DEPTH off")
+                cv2.putText(frame, s, (10, frame.shape[0] - 12),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+            cv2.imshow("Lego shapes (board-frame snap + depth)", frame)
+            if cv2.waitKey(1) == 27:
+                break
+    finally:
+        if depth:
+            depth.stop()
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

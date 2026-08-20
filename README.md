@@ -116,15 +116,19 @@ to a grid so shapes combine cleanly.
 python detect_lego.py
 ```
 
-- Print ArUco tags from **`DICT_4X4_50`** (one per shape) and tape one flat on
-  each shape.
-- Tune the `COLORS` HSV ranges (use the tuner in `docs/ROADMAP.md`) and set
-  `GRID` / `ANGLE_STEP` to your Lego stud size — the on-screen grid shows the
-  lattice everything snaps to.
-- Streams `/shape [id, x, y, angle, shape, color]` (one message per shape) and
-  `/shape_gone [id]` when a shape leaves. Snapped x/y are pixels — Unreal
-  divides by the **÷50** scale divisor. This replaces the old `/obj`
-  switch-on-colour messages; build the ID-based receiver against `/shape`.
+- Print ArUco tags from **`DICT_4X4_50`**. **Ids 0–3 are the board corners**
+  (0=TL, 1=TR, 2=BR, 3=BL) — tape them at the table corners. Give every shape
+  its own tag with **id ≥ 4**.
+- The 4 corner tags let it snap in a rectified **board frame** instead of
+  camera-pixel space, so snapping works even though the camera is slightly
+  angled. Set `BOARD_COLS`/`BOARD_ROWS` to how many grid cells span the taped
+  rectangle; the on-screen grid shows the lattice everything snaps to.
+- Tune the `COLORS` HSV ranges with the tuner in `docs/ROADMAP.md`.
+- Streams `/shape [id, x, y, z, angle, shape, color]` (one message per shape)
+  and `/shape_gone [id]` when a shape leaves. **x,y are board grid cells** —
+  in Unreal place at `x,y * cellSize` (no ÷50 in this path). `z` is metric
+  depth in meters (needs the optional DA3 install above; set `USE_DEPTH=False`
+  to skip). Build the ID-based receiver against `/shape`.
 
 ### 3. No camera handy?
 
