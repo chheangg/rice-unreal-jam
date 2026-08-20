@@ -315,9 +315,10 @@ def main():
         report = []
         for c in COLORS:
             for ct in pieces[c["name"]]:
-                x, y, w, h = cv2.boundingRect(ct)
+                x, y, w, h = cv2.boundingRect(ct)   # still used to anchor text
                 (u, v), (rw, rh), _ = cv2.minAreaRect(ct)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), c["draw"], 2)
+                # trace the piece's ACTUAL outline, not a bounding box
+                cv2.drawContours(frame, [ct], -1, c["draw"], 2)
 
                 shape = classify_shape(ct)
                 # A tag whose centre falls inside this blob gives its rotation.
