@@ -26,7 +26,17 @@ which is in effect ("intr:DA3" vs "intr:FOV60").
 Depth degrades soft: no torch / no DA3 / no GPU -> Z shows "?", X/Y/size blank,
 colour detection still works. Install per README to enable depth.
 
-Controls: same as lego_locator.py, plus nothing new. Esc/q quits.
+Controls (focus the window):
+    S/V floor, Min area sliders  - colour detection (as lego_locator.py)
+    f  - toggle FLOOR-frame vs CAMERA-frame coordinates
+    p  - print every piece: colour/shape, XYZ, size cm, angle
+    Esc / q - quit
+
+Also reports, per piece: SHAPE (square/circle/cross, from contour
+geometry), ROTATION (degrees, when an ArUco tag sits on the block), and
+FLOOR-frame X/Y/Z - a ground plane fitted from the depth cloud with
+RANSAC (surface-agnostic, no floor marker; Z is height above the floor).
+Add --osc to stream [name,x_mm,y_mm,angle,w_cm,h_cm,z_mm] to Unreal.
 
 Run:
     python lego_locator_xyz.py            # default camera
@@ -36,15 +46,129 @@ Run:
 """
 
 import argparse
+import cmath
 import math
 import time
+from collections import Counter, deque
 
 import cv2
 import numpy as np
 
-from lego_locator import (COLORS, find_pieces, as_source,
+from lego_locator import (COLORS, find_pieces, as_source, classify_shape,
                           DEFAULT_S_FLOOR, DEFAULT_V_FLOOR, DEFAULT_MIN_AREA_100)
 from depth_estimator import DepthEstimator
+
+ARUCO_DICT = "DICT_4X4_50"          # matches generate_aruco_tags.py
+
+
+def make_aruco():
+    """ArUco detector that works on old and new OpenCV (5.x dropped legacy)."""
+    a = cv2.aruco
+    dic = a.getPredefinedDictionary(getattr(a, ARUCO_DICT))
+    try:
+        params = a.DetectorParameters()
+    except AttributeError:
+        params = a.DetectorParameters_create()
+    try:
+        return ("new", a.ArucoDetector(dic, params))
+    except AttributeError:
+        return ("old", (dic, params))
+
+
+def detect_markers(gray, state):
+    """Return [(center_xy, angle_deg, corners)] for every tag found."""
+    mode, obj = state
+    if mode == "new":
+        corners, ids, _ = obj.detectMarkers(gray)
+    else:
+        dic, params = obj
+        corners, ids, _ = cv2.aruco.detectMarkers(gray, dic, parameters=params)
+    out = []
+    if ids is None:
+        return out
+    for c in corners:
+        pts = c.reshape(4, 2)                 # TL, TR, BR, BL
+        center = pts.mean(axis=0)
+        tl, tr = pts[0], pts[1]
+        angle = math.degrees(math.atan2(tr[1] - tl[1], tr[0] - tl[0])) % 360.0
+        out.append((center, angle, pts))
+    return out
+
+
+class FloorFrame:
+    """
+    Surface-agnostic ground frame fitted from the depth point cloud with RANSAC
+    - no marker on the floor needed, and colour-agnostic (works on the black
+    table; depth is geometry, not colour). Once a dominant plane (the floor) is
+    found, a block's position is reported IN THAT FRAME: X/Y along the floor,
+    Z = height above it. The camera being fixed, the plane is stable frame to
+    frame; we refit whenever a new depth map arrives.
+    """
+    def __init__(self):
+        self.ok = False
+        self.n = None          # unit normal, pointing toward the camera
+        self.p0 = None         # a point on the plane (inlier centroid)
+        self.u = self.v = None  # in-plane basis
+
+    def fit(self, depth, fx, fy, cx, cy, frame_wh, step=10,
+            iters=120, thresh=0.012):
+        H, W = depth.shape
+        fw, fh = frame_wh
+        ys, xs = np.mgrid[0:H:step, 0:W:step]
+        z = depth[ys, xs].astype(np.float32).ravel()
+        xs = xs.ravel().astype(np.float32)
+        ys = ys.ravel().astype(np.float32)
+        good = np.isfinite(z) & (z > 0)
+        if good.sum() < 60:
+            self.ok = False
+            return
+        z = z[good]
+        # depth-map pixels -> frame pixels, then back-project with frame intrinsics
+        u = xs[good] * (fw / W)
+        v = ys[good] * (fh / H)
+        P = np.stack([(u - cx) * z / fx, (v - cy) * z / fy, z], axis=1)
+
+        rng = np.random.default_rng(0)
+        best_inl, best = 0, None
+        for _ in range(iters):
+            i = rng.choice(len(P), 3, replace=False)
+            a, b, c = P[i]
+            nrm = np.cross(b - a, c - a)
+            ln = np.linalg.norm(nrm)
+            if ln < 1e-9:
+                continue
+            nrm = nrm / ln
+            d = -nrm.dot(a)
+            dist = np.abs(P.dot(nrm) + d)
+            inl = int((dist < thresh).sum())
+            if inl > best_inl:
+                best_inl, best = inl, (nrm, d)
+        if best is None or best_inl < len(P) * 0.3:
+            self.ok = False
+            return
+        nrm, d = best
+        # least-squares refit to the inliers for a cleaner plane
+        inl = np.abs(P.dot(nrm) + d) < thresh
+        Q = P[inl]
+        p0 = Q.mean(axis=0)
+        _, _, Vt = np.linalg.svd(Q - p0)
+        nrm = Vt[2]
+        # normal should point toward the camera (origin) so height is +ve up
+        if nrm.dot(-p0) < 0:
+            nrm = -nrm
+        # in-plane basis
+        seed = np.array([1.0, 0.0, 0.0])
+        if abs(nrm.dot(seed)) > 0.9:
+            seed = np.array([0.0, 1.0, 0.0])
+        uax = np.cross(nrm, seed); uax /= np.linalg.norm(uax)
+        vax = np.cross(nrm, uax)
+        self.n, self.p0, self.u, self.v, self.ok = nrm, p0, uax, vax, True
+
+    def to_floor(self, P_cam):
+        """Camera 3D point -> (X_floor, Y_floor, height) in meters."""
+        rel = P_cam - self.p0
+        return (float(self.u.dot(rel)), float(self.v.dot(rel)),
+                float(self.n.dot(rel)))
 
 
 class Tracks:
@@ -63,7 +187,7 @@ class Tracks:
         self.max_miss = max_miss
         self.slots = {}                         # colour name -> list of slots
 
-    def update(self, color, cx, cy, z, w_cm, h_cm):
+    def update(self, color, cx, cy, z, w_cm, h_cm, angle=None, shape=None):
         lst = self.slots.setdefault(color, [])
         best, best_d = None, 1e9
         for s in lst:
@@ -71,8 +195,9 @@ class Tracks:
             if d < best_d:
                 best, best_d = s, d
         if best is None or best_d > self.match_dist:
-            best = {"cx": cx, "cy": cy, "z": z, "w_cm": w_cm,
-                    "h_cm": h_cm, "miss": 0}
+            best = {"cx": cx, "cy": cy, "z": z, "w_cm": w_cm, "h_cm": h_cm,
+                    "angle": angle, "_phasor": None, "shapes": deque(maxlen=9),
+                    "shape": shape, "miss": 0}
             lst.append(best)
         best["cx"], best["cy"], best["miss"] = cx, cy, 0
         a = self.alpha
@@ -80,6 +205,14 @@ class Tracks:
             if val is None:
                 continue                        # no depth this frame: keep last
             best[k] = val if best[k] is None else (1 - a) * best[k] + a * val
+        if angle is not None:                   # circular EMA (handles 0/360 wrap)
+            zc = cmath.exp(1j * math.radians(angle))
+            best["_phasor"] = zc if best["_phasor"] is None \
+                else a * zc + (1 - a) * best["_phasor"]
+            best["angle"] = math.degrees(cmath.phase(best["_phasor"])) % 360.0
+        if shape and shape != "?":              # majority vote over recent frames
+            best["shapes"].append(shape)
+            best["shape"] = Counter(best["shapes"]).most_common(1)[0][0]
         return best
 
     def age(self):
@@ -110,12 +243,28 @@ def main():
                     help="assumed horizontal FOV (deg) if DA3 gives no intrinsics")
     ap.add_argument("--model", default=None,
                     help="override DA3 model id (e.g. depth-anything/DA3-SMALL)")
+    ap.add_argument("--osc", action="store_true",
+                    help="send [name,x,y,angle,sx,sy,z] to Unreal on /obj")
+    ap.add_argument("--osc-host", default="127.0.0.1")
+    ap.add_argument("--osc-port", type=int, default=7000)
+    ap.add_argument("--no-floor", action="store_true",
+                    help="report camera-frame XYZ instead of floor-frame")
     args = ap.parse_args()
 
     cap = cv2.VideoCapture(as_source(args.source))
     if not cap.isOpened():
         print(f"FAILED to open {args.source!r}")
         return 1
+
+    osc = None
+    if args.osc:
+        from pythonosc.udp_client import SimpleUDPClient
+        osc = SimpleUDPClient(args.osc_host, args.osc_port)
+        print(f"[osc] sending /obj -> {args.osc_host}:{args.osc_port}")
+
+    aruco = make_aruco()
+    floor = FloorFrame()
+    use_floor = not args.no_floor
 
     print("[depth] initialising Depth Anything 3 (first run downloads the "
           "model; this can take a minute)...")
@@ -148,6 +297,18 @@ def main():
         v_floor = cv2.getTrackbarPos("V floor", win)
         min_area = cv2.getTrackbarPos("Min area/100", win) * 100
 
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        markers = detect_markers(gray, aruco)     # [(center, angle, corners)]
+        for center, angle, pts in markers:
+            cv2.polylines(frame, [pts.astype(int)], True, (255, 0, 255), 2)
+
+        # Refit the floor plane from the current depth map (cheap, subsampled).
+        if use_floor and depth.has_depth():
+            with depth._depth_lock:
+                dm = depth._depth
+            if dm is not None:
+                floor.fit(dm, fx, fy, cx, cy, (W, H))
+
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         pieces, _ = find_pieces(hsv, s_floor, v_floor, min_area)
 
@@ -158,10 +319,17 @@ def main():
                 (u, v), (rw, rh), _ = cv2.minAreaRect(ct)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), c["draw"], 2)
 
+                shape = classify_shape(ct)
+                # A tag whose centre falls inside this blob gives its rotation.
+                angle = None
+                for center, ang, _pts in markers:
+                    if cv2.pointPolygonTest(ct, (float(center[0]),
+                                                 float(center[1])), False) >= 0:
+                        angle = ang
+                        break
+
                 # Depth sampled ONLY inside the piece (eroded a few px so the
                 # coarse depth map doesn't pick up background at the edges).
-                # This is what makes size constant as the piece moves - the
-                # bounding box would mix in table/background depth.
                 mask = np.zeros((H, W), np.uint8)
                 cv2.drawContours(mask, [ct], -1, 255, -1)
                 mask = cv2.erode(mask, np.ones((7, 7), np.uint8))
@@ -174,16 +342,33 @@ def main():
                 if z is not None:
                     w_cm_raw = (rw / fx) * z * 100.0
                     h_cm_raw = (rh / fy) * z * 100.0
-                    slot = tracks.update(c["name"], u, v, z, w_cm_raw, h_cm_raw)
+                    slot = tracks.update(c["name"], u, v, z, w_cm_raw, h_cm_raw,
+                                         angle, shape)
                     zs, w_cm, h_cm = slot["z"], slot["w_cm"], slot["h_cm"]
-                    X = (u - cx) * zs / fx
-                    Y = (v - cy) * zs / fy
-                    l1 = f"{c['name']} ({X:+.2f},{Y:+.2f},{zs:.2f})m"
-                    l2 = f"{w_cm:.1f}x{h_cm:.1f}cm"
-                    report.append((c["name"], X, Y, zs, w_cm, h_cm))
+                    P_cam = np.array([(u - cx) * zs / fx,
+                                      (v - cy) * zs / fy, zs])
+                    if use_floor and floor.ok:
+                        X, Y, Zf = floor.to_floor(P_cam)   # floor frame, height
+                        frame_tag = "flr"
+                    else:
+                        X, Y, Zf = P_cam[0], P_cam[1], zs  # camera frame
+                        frame_tag = "cam"
+                    ang_txt = f" {slot['angle']:.0f}deg" if slot["angle"] \
+                        is not None else ""
+                    l1 = f"{c['name']}/{slot['shape']} ({X:+.2f},{Y:+.2f},{Zf:+.2f}){frame_tag}"
+                    l2 = f"{w_cm:.1f}x{h_cm:.1f}cm{ang_txt}"
+                    report.append((c["name"], slot["shape"], X, Y, Zf,
+                                   w_cm, h_cm, slot["angle"]))
+                    if osc is not None:
+                        a_out = 0.0 if slot["angle"] is None else slot["angle"]
+                        # meters -> mm for Unreal; keep the /obj layout
+                        osc.send_message("/obj", [c["name"], X * 1000.0,
+                                         Y * 1000.0, a_out, w_cm, h_cm,
+                                         Zf * 1000.0])
                 else:
-                    tracks.update(c["name"], u, v, None, None, None)
-                    l1 = f"{c['name']} z=? {int(rw)}x{int(rh)}px"
+                    slot = tracks.update(c["name"], u, v, None, None, None,
+                                         angle, shape)
+                    l1 = f"{c['name']}/{slot['shape']} z=? {int(rw)}x{int(rh)}px"
                     l2 = ""
                 cv2.putText(frame, l1, (x, y - 24), cv2.FONT_HERSHEY_SIMPLEX,
                             0.5, c["draw"], 2)
@@ -200,18 +385,24 @@ def main():
             dstat = "DEPTH on" if depth.has_depth() else "DEPTH loading..."
         else:
             dstat = "DEPTH off"
-        cv2.putText(frame, f"{dstat}  intr:{intr_src}  {fps:.0f}fps",
+        frame_state = ("FLOOR" if (use_floor and floor.ok)
+                       else "floor?" if use_floor else "CAM")
+        cv2.putText(frame, f"{dstat}  frame:{frame_state}  intr:{intr_src}  "
+                    f"tags:{len(markers)}  {fps:.0f}fps",
                     (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         cv2.imshow(win, frame)
         key = cv2.waitKey(1) & 0xFF
         if key in (27, ord('q')):
             break
+        elif key == ord('f'):
+            use_floor = not use_floor
         elif key == ord('p'):
             if report:
-                print(f"[intr:{intr_src}] " + " | ".join(
-                    f"{n}: X{X:+.2f} Y{Y:+.2f} Z{z:.2f}m {w:.1f}x{h:.1f}cm"
-                    for (n, X, Y, z, w, h) in report))
+                print(" | ".join(
+                    f"{n}/{sh}: ({X:+.2f},{Y:+.2f},{Z:+.2f}) "
+                    f"{w:.1f}x{h:.1f}cm ang={ang}"
+                    for (n, sh, X, Y, Z, w, h, ang) in report))
             else:
                 print("no pieces with depth yet")
 

@@ -30,6 +30,7 @@ Run:
     python lego_locator.py "clip.mp4"                        # a recorded file
 """
 
+import math
 import sys
 import time
 
@@ -61,6 +62,41 @@ def as_source(text):
         return int(text)
     except ValueError:
         return text
+
+
+# Shape thresholds - tune if a shape is mislabelled under your pieces/lighting.
+CROSS_SOLIDITY = 0.80     # below this = concave (a cross has notches)
+CIRCLE_CIRCULARITY = 0.82  # above this = round
+
+
+def classify_shape(contour):
+    """
+    Label a piece contour as 'square', 'circle', 'cross', or '?'.
+
+    Two features do the work:
+      solidity    = area / convex-hull area. A cross is concave - its notches
+                    make the hull much bigger than the shape - so solidity is
+                    low (~0.6-0.7). A square and a circle are convex (~0.95+).
+      circularity = 4*pi*area / perimeter^2. A circle ~1.0, a square ~0.79.
+    So: low solidity -> cross; else round -> circle; else -> square. The corner
+    count from approxPolyDP is used only as a tie-breaker.
+    """
+    area = cv2.contourArea(contour)
+    peri = cv2.arcLength(contour, True)
+    if area < 1.0 or peri <= 0:
+        return "?"
+    circularity = 4.0 * math.pi * area / (peri * peri)
+    hull_area = cv2.contourArea(cv2.convexHull(contour))
+    solidity = area / hull_area if hull_area > 0 else 1.0
+    n = len(cv2.approxPolyDP(contour, 0.03 * peri, True))
+
+    if solidity < CROSS_SOLIDITY:
+        return "cross"                 # concave -> plus/cross
+    if circularity >= CIRCLE_CIRCULARITY and n >= 7:
+        return "circle"                # round and many-sided
+    if n <= 6:
+        return "square"                # convex, few corners
+    return "circle" if circularity >= CIRCLE_CIRCULARITY else "?"
 
 
 def color_mask(hsv, color, s_floor, v_floor):
