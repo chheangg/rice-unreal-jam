@@ -1,0 +1,45 @@
+name: graphify
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'graphify-out/**'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-graph:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install graphify
+        run: pip install graphifyy
+
+      - name: Rebuild graph (code-only, no LLM key in CI)
+        run: python .github/scripts/graphify_ci_build.py
+
+      - name: Export HTML
+        run: graphify export html
+
+      - name: Commit and push graph updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add graphify-out/
+          if git diff --cached --quiet; then
+            echo "No graph changes to commit"
+          else
+            git commit -m "graphify: auto-rebuild code graph [skip ci]"
+            git push
+          fi
