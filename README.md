@@ -81,8 +81,11 @@ python detect.py
 
 This opens your default camera, detects:
 - 3 yellow blocks → `yel1`, `yel2`, `yel3`
-- 1 silver block → `slv`
-- a pink marker inside each block, used to compute its facing angle
+- 1 red block → `red`
+
+Only these two colors are detected (no direction marker) so nothing else in
+frame gets mistaken for a tracked block. `angle` is always `0` in the OSC
+message below (kept only for index compatibility with Unreal).
 
 and streams `[name, x, y, angle, sizeX, sizeY]` to Unreal over OSC on the
 `/obj` address. A preview window shows what's being detected; press `Esc`
@@ -117,6 +120,9 @@ set up.
 - `inspect_bp.py` isn't run from a normal terminal — it's meant to be
   executed inside Unreal's own Python environment (Editor Utility / Python
   console) to inspect Blueprint graphs.
-- Camera color thresholds (`YELLOW`, `SILVER`, `MARKER` ranges in
-  `detect.py`) are tuned for a specific lighting setup — if detection is
-  flaky, that's the first place to look.
+- Camera color thresholds (`YELLOW`, `RED` ranges in `detect.py`) are tuned
+  for a specific lighting setup — if detection is flaky, that's the first
+  place to look. `RED` wraps around the HSV hue circle (0 and 180 are both
+  "red"), so it's defined as two merged ranges; if it picks up skin tone or
+  other reddish/pinkish objects in frame, narrow the saturation/value floor
+  first before touching the hue bounds.
