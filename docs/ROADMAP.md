@@ -108,6 +108,32 @@ despite how it's sometimes referred to). Design notes:
 - Wants a CUDA GPU for interactive rates; on the CPU it will crawl (consider
   `DA3-SMALL` for speed at the cost of metric accuracy).
 
+## Combined color + ArUco detection with snapping (new — `detect_lego.py`)
+
+Implements Next-action #3 (combined detection) **and** the snap-to-grid "wow"
+layer in one script.
+
+- **Colour → shape**: `COLORS` config maps each of the 5 Lego colours to its
+  pre-built shape (L/U/T/I/Z placeholders — rename to your set). Masks are
+  blurred + morphologically cleaned; red uses two hue ranges (wraparound).
+  Tune the ranges with the HSV tuner above.
+- **ArUco → id + rotation**: one `DICT_4X4_50` tag per shape gives a stable id
+  and true 0–360° angle. A tag is paired to the colour blob that *contains*
+  its centre, so colour says *what* + *where* (blob centroid), tag says
+  *which instance* + *how turned*. Detector code works on both old and new
+  (`ArucoDetector`) OpenCV.
+- **Snapping**: position quantised to a `GRID`, rotation to `ANGLE_STEP` (90°),
+  each with a hysteresis deadband (`SNAP_MARGIN`, `ANGLE_MARGIN`) so jitter
+  doesn't twitch shapes between cells. Two shapes placed near each other land
+  on the *same* lattice → they line up and combine cleanly ("snap"). A faint
+  grid overlay shows the lattice. Set `GRID` to match your Lego stud size and
+  the Unreal grid (remember the **÷50** scale divisor).
+- **OSC** (one message per shape, avoids the multi-message race noted below):
+  `/shape [id, x, y, angle, shape, color]`; a `/shape_gone [id]` fires when a
+  tracked shape disappears so Unreal can despawn it. This replaces the old
+  `/obj` switch-on-colour layout — build the ID-based receiver against it
+  (Next-action #4).
+
 ## Engine / stack
 
 - **Unreal Engine 5.8** (MechTwin03 project baseline; OSC receiver Blueprint built for this version)
@@ -133,7 +159,7 @@ despite how it's sometimes referred to). Design notes:
 
 1. [ ] Run the HSV tuner on all 5 Lego colors under demo lighting; record ranges.
 2. [ ] Decide: pre-made meshes vs. live-generated (→ recommend pre-made).
-3. [ ] Build combined color + ArUco detection script (position, rotation, ID, shape/color label).
-4. [ ] Build Unreal ID-based spawn/update receiver.
+3. [x] Build combined color + ArUco detection script (position, rotation, ID, shape/color label). → `detect_lego.py` (also adds snap-to-grid). **Still needs HSV ranges + GRID tuned under demo lighting, and a runtime test — untested (no camera on the dev box).**
+4. [ ] Build Unreal ID-based spawn/update receiver — against `/shape [id,x,y,angle,shape,color]` + `/shape_gone [id]`.
 5. [ ] Add one "wow" feature only.
 6. [ ] Harden + rehearse.

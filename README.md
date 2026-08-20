@@ -106,6 +106,26 @@ need per-rig calibration — if `z` looks off versus a tape measure, tune
 `metric_scale` in `depth_estimator.py`. Requires the optional DA3 install
 above; without it, it prints a warning and sends `z = -1.0`.
 
+### 2c. Lego shapes: colour + ArUco + snapping (`detect_lego.py`)
+
+The current direction (see `docs/ROADMAP.md`): each Lego colour = one shape,
+one ArUco tag per shape for a stable id + true rotation, and everything snaps
+to a grid so shapes combine cleanly.
+
+```
+python detect_lego.py
+```
+
+- Print ArUco tags from **`DICT_4X4_50`** (one per shape) and tape one flat on
+  each shape.
+- Tune the `COLORS` HSV ranges (use the tuner in `docs/ROADMAP.md`) and set
+  `GRID` / `ANGLE_STEP` to your Lego stud size — the on-screen grid shows the
+  lattice everything snaps to.
+- Streams `/shape [id, x, y, angle, shape, color]` (one message per shape) and
+  `/shape_gone [id]` when a shape leaves. Snapped x/y are pixels — Unreal
+  divides by the **÷50** scale divisor. This replaces the old `/obj`
+  switch-on-colour messages; build the ID-based receiver against `/shape`.
+
 ### 3. No camera handy?
 
 Run `send_test.py` instead — it sends a fixed test message on a loop so you
