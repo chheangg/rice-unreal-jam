@@ -116,13 +116,16 @@ to a grid so shapes combine cleanly.
 python detect_lego.py
 ```
 
-- Print ArUco tags from **`DICT_4X4_50`**. **Ids 0–3 are the board corners**
-  (0=TL, 1=TR, 2=BR, 3=BL) — tape them at the table corners. Give every shape
-  its own tag with **id ≥ 4**.
-- The 4 corner tags let it snap in a rectified **board frame** instead of
-  camera-pixel space, so snapping works even though the camera is slightly
-  angled. Set `BOARD_COLS`/`BOARD_ROWS` to how many grid cells span the taped
-  rectangle; the on-screen grid shows the lattice everything snaps to.
+- Print ArUco tags from **`DICT_4X4_50`** and give every shape its own tag.
+- **Snapping works despite the slightly-angled camera** because it snaps in a
+  **board frame**, not camera-pixel space. Two modes (`BOARD_MODE`):
+  - **`selfcal`** (default, **no extra tags**): reads the board's rotation
+    from the pieces' own tags (Lego is grid-aligned) and snaps in that frame.
+    Set `GRID` near your Lego stud size in pixels. Corrects rotation (not
+    perspective) — fine for a slightly angled cam.
+  - **`corners`** (higher accuracy): tape 4 tags at the table corners
+    (ids 0=TL,1=TR,2=BR,3=BL, shapes use id ≥ 4). A homography also corrects
+    perspective/tilt. Set `BOARD_COLS`/`BOARD_ROWS` to cells across the board.
 - Tune the `COLORS` HSV ranges with the tuner in `docs/ROADMAP.md`.
 - Streams `/shape [id, x, y, z, angle, shape, color]` (one message per shape)
   and `/shape_gone [id]` when a shape leaves. **x,y are board grid cells** —

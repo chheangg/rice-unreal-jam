@@ -125,16 +125,19 @@ layer in one script.
 - **Board-frame snapping (fixes the angled-camera problem)**: a slightly
   angled top-down camera does *not* see the Lego lattice aligned to its pixel
   grid — the board is rotated/perspective-warped on screen, so pixel-space
-  snapping snaps to the wrong lattice. Fix: tape **4 ArUco corner tags**
-  (ids 0=TL,1=TR,2=BR,3=BL) at the table corners; a homography maps camera
-  pixels → a flat, axis-aligned board grid measured in *cells*
-  (`BOARD_COLS`×`BOARD_ROWS`). Positions and angles are transformed into that
-  frame and snapped there (integer cell + 0/90/180/270), with hysteresis
-  deadbands (`SNAP_MARGIN`, `ANGLE_MARGIN`) so jitter doesn't twitch cells.
-  Camera is fixed → the homography is cached, so it survives a corner tag
-  being briefly occluded. The rectified grid is drawn back onto the frame as
-  visual confirmation. Because x,y are already grid cells, Unreal places at
-  `x,y * cellSize` — **no ÷50 needed** in this path.
+  snapping snaps to the wrong lattice. Two modes (`BOARD_MODE`):
+  - **`selfcal`** (default, **zero extra setup**): every shape already has a
+    tag and Lego is grid-aligned, so their tag angles agree mod 90°. We read
+    the board rotation from the pieces themselves (smoothed circular estimate,
+    stable because the camera is fixed) and snap in that rotated frame.
+    Corrects rotation, not perspective — fine for a *slightly* angled cam.
+  - **`corners`**: tape 4 ArUco corner tags (ids 0–3); a homography also
+    corrects perspective/tilt. Cached (fixed camera) so it survives brief
+    occlusion.
+  Both snap to integer cell + 0/90/180/270 with hysteresis (`SNAP_MARGIN`,
+  `ANGLE_MARGIN`) so jitter doesn't twitch cells; the board grid is drawn back
+  onto the frame as confirmation. x,y are grid cells → Unreal places at
+  `x,y * cellSize` (**no ÷50** in this path).
 - **Depth (z)**: folds in `depth_estimator.py` (Depth Anything 3) sampled at
   each shape's camera-space box, so every shape carries metric z. Runs on a
   background thread; `USE_DEPTH=False` to skip it for max FPS.
