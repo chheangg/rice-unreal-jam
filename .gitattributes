@@ -1,0 +1,5 @@
+*.MP4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.MOV filter=lfs diff=lfs merge=lfs -text
+MT03_RealTimeLayout/Intermediate/CachedAssetRegistry/*.bin filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
