@@ -1,7 +1,7 @@
 # Graph Report - rice-unreal-jam  (2026-08-20)
 
 ## Corpus Check
-- Corpus is ~12,064 words - fits in a single context window. You may not need a graph.
+- Corpus is ~12,183 words - fits in a single context window. You may not need a graph.
 
 ## Summary
 - 49 nodes · 47 edges · 14 communities (5 shown, 9 thin omitted)
