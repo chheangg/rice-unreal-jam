@@ -12,7 +12,8 @@ current direction.
 ```
 MT03_RealTimeLayout/   Unreal Engine project (engine 5.8)
 detect.py              webcam block tracker -> sends OSC to Unreal
-send_test.py           sends fake OSC messages, for testing without a camera
+send_test.py           fake tracker - replays the real OSC message, no camera
+camera_probe.py        checks what OpenCV can see (indices or a phone URL)
 inspect_bp.py          debug script, run inside Unreal's embedded Python
 Video/, mt03 outputs/  recordings + Premiere project files (Git LFS)
 tasks/                 task requests — see tasks/README.md
@@ -111,9 +112,57 @@ above; without it, it prints a warning and sends `z = -1.0`.
 
 ### 3. No camera handy?
 
-Run `send_test.py` instead — it sends a fixed test message on a loop so you
-can confirm the Unreal side is receiving OSC without needing the camera rig
-set up.
+Run `send_test.py` instead — it fakes the tracker. It sends the *same*
+`/obj` message the real trackers send (`[name, x, y, angle, sizeX, sizeY, z]`),
+at a realistic frame rate, for several blocks circling around the frame — so
+the Unreal receiver can be built and debugged with no camera, no lighting rig
+and no blocks on the table.
+
+```
+python send_test.py                  # 4 blocks, 30 Hz
+python send_test.py --ids 6          # more blocks (extras named tag4, tag5, ...)
+python send_test.py --churn 3        # a block appears/disappears every 3s
+python send_test.py --no-z           # 6-element message, matching detect.py
+python send_test.py --rate 5         # slow it down to read UE logs
+```
+
+Two things it does on purpose that the current colour tracker doesn't:
+`angle` really sweeps 0–359 (ArUco will send a true angle, so the receiver's
+rotation path needs testing now), and `--churn` makes names come and go, which
+is what the ID-based receiver has to survive — spawn on a name it hasn't seen,
+cope with one going quiet. Ctrl-C to stop.
+
+### 4. Using a phone as the camera
+
+`camera_probe.py` answers "can OpenCV see this camera, and how fast?" before
+you touch the tracker:
+
+```
+python camera_probe.py                                  # scan indices 0..5
+python camera_probe.py 0                                # preview an index
+python camera_probe.py http://172.20.10.1:8080/video    # preview a phone stream
+```
+
+It reports resolution and, more importantly, **measured** fps rather than the
+fps the source claims - an IP camera app will happily advertise 30 and deliver
+6, which looks like a tracking bug but is a network problem.
+
+On **iPhone + Windows**, Continuity Camera is not an option (macOS only). Two
+routes work:
+
+- **IP camera app** (e.g. IP Camera Lite) - serves MJPEG over HTTP, no driver
+  on the laptop. Point OpenCV straight at the URL.
+- **Virtual webcam driver** (iVCam, EpocCam) - needs a laptop-side driver, but
+  the phone then shows up as an ordinary camera index and no code changes.
+
+For a demo, connect the laptop to the **iPhone's Personal Hotspot** rather than
+venue wifi. It's a direct private link, so it survives networks that isolate
+clients from each other, and needs no internet at all. On that hotspot the
+iPhone is always **172.20.10.1** (Apple uses a fixed 172.20.10.0/28 subnet).
+
+Don't route this through a relay like ngrok: it sends video to a cloud server
+and back to a laptop three feet away, adding latency to the one thing that has
+to feel instant, and puts your camera feed on a public URL.
 
 ## Notes
 
