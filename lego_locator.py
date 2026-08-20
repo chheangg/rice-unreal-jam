@@ -54,7 +54,13 @@ DEFAULT_S_FLOOR = 140      # saturation minimum - the main skin-rejection knob
 DEFAULT_V_FLOOR = 70       # brightness minimum - drops dark shadow
 DEFAULT_MIN_AREA_100 = 8   # min blob area, in units of 100 px^2 -> 800 px^2
 
-KERNEL = np.ones((5, 5), np.uint8)
+KERNEL = np.ones((5, 5), np.uint8)          # open: kills small speckle
+# close uses a bigger kernel to BRIDGE gaps that split a piece into fragments
+# at distance (where it subtends few pixels and lighting punches holes in the
+# mask). Without this, a far piece breaks into pieces and its measured size
+# halves. Keep it smaller than the spacing between separate pieces so it
+# doesn't merge two of them.
+CLOSE_KERNEL = np.ones((13, 13), np.uint8)
 
 
 def as_source(text):
@@ -114,9 +120,10 @@ def color_mask(hsv, color, s_floor, v_floor):
         hi = np.array((hi_h, 255, 255))
         m = cv2.inRange(hsv, lo, hi)
         mask = m if mask is None else (mask | m)
-    # open removes speckle, close fills pinholes inside a brick
+    # open removes speckle; close (bigger kernel) bridges gaps so a piece stays
+    # ONE blob even at distance, instead of fragmenting and halving its size
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, KERNEL)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, KERNEL)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, CLOSE_KERNEL)
     return mask
 
 

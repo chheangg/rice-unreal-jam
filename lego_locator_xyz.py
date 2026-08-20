@@ -182,8 +182,9 @@ class Tracks:
     responsive); only z and cm are.
     """
     def __init__(self, alpha=0.25, match_dist=90, max_miss=15,
-                 settle_seconds=3.0):
+                 settle_seconds=3.0, size_alpha=0.12):
         self.alpha = alpha
+        self.size_alpha = size_alpha            # slower EMA for size (steadier)
         self.match_dist = match_dist
         self.max_miss = max_miss
         self.settle_seconds = settle_seconds    # a new piece must persist this
@@ -201,6 +202,8 @@ class Tracks:
         if best is None or best_d > self.match_dist:
             # brand-new piece: start its settle timer, not confirmed yet
             best = {"cx": cx, "cy": cy, "z": z, "w_cm": w_cm, "h_cm": h_cm,
+                    "w_samps": deque(maxlen=90), "h_samps": deque(maxlen=90),
+                    "size_locked": False,
                     "angle": angle, "_phasor": None, "shapes": deque(maxlen=9),
                     "shape": shape, "miss": 0,
                     "first_seen": now, "confirmed": False}
@@ -214,10 +217,24 @@ class Tracks:
         if not best["confirmed"] and best["settle_left"] <= 0.0:
             best["confirmed"] = True
         a = self.alpha
-        for k, val in (("z", z), ("w_cm", w_cm), ("h_cm", h_cm)):
-            if val is None:
-                continue                        # no depth this frame: keep last
-            best[k] = val if best[k] is None else (1 - a) * best[k] + a * val
+        if z is not None:                       # position/depth keep tracking
+            best["z"] = z if best["z"] is None else (1 - a) * best["z"] + a * z
+        # SIZE IS MEASURED, THEN LOCKED. A piece is rigid, so we collect size
+        # samples during the settle window and freeze the size (median of them)
+        # the moment the piece is confirmed. After that it never changes with
+        # distance - no oscillation. To re-measure (e.g. after stacking), take
+        # the piece out and back in, which restarts the settle.
+        if not best["size_locked"]:
+            if w_cm is not None:
+                best["w_samps"].append(w_cm)
+            if h_cm is not None:
+                best["h_samps"].append(h_cm)
+            if best["confirmed"]:
+                if best["w_samps"]:
+                    best["w_cm"] = float(np.median(best["w_samps"]))
+                if best["h_samps"]:
+                    best["h_cm"] = float(np.median(best["h_samps"]))
+                best["size_locked"] = True
         if angle is not None:                   # circular EMA (handles 0/360 wrap)
             zc = cmath.exp(1j * math.radians(angle))
             best["_phasor"] = zc if best["_phasor"] is None \
@@ -265,6 +282,9 @@ def main():
     ap.add_argument("--settle", type=float, default=3.0,
                     help="seconds a new piece must persist before it's confirmed "
                          "and reported/sent (default 3; 0 = instant)")
+    ap.add_argument("--debug-size", action="store_true",
+                    help="log raw pixel size and depth per piece, to check "
+                         "whether pixel*depth (the real size) stays constant")
     args = ap.parse_args()
 
     cap = cv2.VideoCapture(as_source(args.source))
@@ -386,7 +406,12 @@ def main():
                     ang_txt = f" {slot['angle']:.0f}deg" if slot["angle"] \
                         is not None else ""
                     l1 = f"{c['name']}/{slot['shape']} ({X:+.2f},{Y:+.2f},{Zf:+.2f}){frame_tag}"
-                    l2 = f"{w_cm:.1f}x{h_cm:.1f}cm{ang_txt}"
+                    l2 = f"{w_cm:.1f}x{h_cm:.1f}cm  d={zs:.2f}m {int(rw)}px{ang_txt}"
+                    if args.debug_size:
+                        # pixel*depth should be constant for a rigid piece; if it
+                        # drifts as the piece moves, the depth is the culprit.
+                        print(f"[size] {c['name']:5} px={rw:5.1f} z={zs:.3f}m "
+                              f"px*z={rw*zs:6.1f} -> {w_cm:.2f}cm")
                     report.append((c["name"], slot["shape"], X, Y, Zf,
                                    w_cm, h_cm, slot["angle"]))
                     if osc is not None:
