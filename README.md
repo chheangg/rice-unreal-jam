@@ -12,7 +12,7 @@ current direction.
 ```
 MT03_RealTimeLayout/   Unreal Engine project (engine 5.8)
 detect.py              webcam block tracker -> sends OSC to Unreal
-send_test.py           sends fake OSC messages, for testing without a camera
+send_test.py           fake tracker - replays the real OSC message, no camera
 inspect_bp.py          debug script, run inside Unreal's embedded Python
 Video/, mt03 outputs/  recordings + Premiere project files (Git LFS)
 tasks/                 task requests — see tasks/README.md
@@ -111,9 +111,25 @@ above; without it, it prints a warning and sends `z = -1.0`.
 
 ### 3. No camera handy?
 
-Run `send_test.py` instead — it sends a fixed test message on a loop so you
-can confirm the Unreal side is receiving OSC without needing the camera rig
-set up.
+Run `send_test.py` instead — it fakes the tracker. It sends the *same*
+`/obj` message the real trackers send (`[name, x, y, angle, sizeX, sizeY, z]`),
+at a realistic frame rate, for several blocks circling around the frame — so
+the Unreal receiver can be built and debugged with no camera, no lighting rig
+and no blocks on the table.
+
+```
+python send_test.py                  # 4 blocks, 30 Hz
+python send_test.py --ids 6          # more blocks (extras named tag4, tag5, ...)
+python send_test.py --churn 3        # a block appears/disappears every 3s
+python send_test.py --no-z           # 6-element message, matching detect.py
+python send_test.py --rate 5         # slow it down to read UE logs
+```
+
+Two things it does on purpose that the current colour tracker doesn't:
+`angle` really sweeps 0–359 (ArUco will send a true angle, so the receiver's
+rotation path needs testing now), and `--churn` makes names come and go, which
+is what the ID-based receiver has to survive — spawn on a name it hasn't seen,
+cope with one going quiet. Ctrl-C to stop.
 
 ## Notes
 
