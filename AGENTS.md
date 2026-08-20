@@ -33,6 +33,13 @@ things are headed.
   it does not extend to other files or to force-pushes/history rewrites.
 - **Roadmap / direction questions:** check `docs/ROADMAP.md` first before
   asking; update it when priorities shift instead of letting it go stale.
+- **Brainstorming / new ideas that come up in conversation:** don't let them
+  live only in that conversation — add them to `docs/ROADMAP.md` (under
+  `Next` or `Later / ideas`, whichever fits) so everyone on the team sees
+  them, then commit and push right away, same as with `/tasks`. This is
+  standing authorization to `git add`/`commit`/`push` for `docs/ROADMAP.md`
+  changes specifically; it does not extend to other files or to
+  force-pushes/history rewrites.
 - **How to run anything:** `README.md` is the source of truth. If you had to
   figure out a run step that wasn't documented, add it back to the README.
 
