@@ -30,7 +30,7 @@
       "file_type": "code",
       "norm_label": "slot",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L96"
+      "source_location": "L114"
     },
     {
       "id": "platform_height_platformheightestimator",
@@ -113,7 +113,7 @@
       "file_type": "code",
       "norm_label": "_ema()",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L92"
+      "source_location": "L96"
     },
     {
       "id": "detect_platform_aruco_load_or_guess_intrinsics",
@@ -124,7 +124,7 @@
       "file_type": "code",
       "norm_label": "load_or_guess_intrinsics()",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L71"
+      "source_location": "L75"
     },
     {
       "id": "detect_platform_aruco_main",
@@ -135,7 +135,18 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L111"
+      "source_location": "L138"
+    },
+    {
+      "id": "detect_platform_aruco_marker_angle_deg",
+      "label": "marker_angle_deg()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "code",
+      "norm_label": "marker_angle_deg()",
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L100"
     },
     {
       "id": "detect_platform_aruco_slot_init",
@@ -146,7 +157,7 @@
       "file_type": "code",
       "norm_label": ".__init__()",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L97"
+      "source_location": "L115"
     },
     {
       "id": "detect_platform_aruco_slot_update",
@@ -157,7 +168,7 @@
       "file_type": "code",
       "norm_label": ".update()",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L103"
+      "source_location": "L123"
     },
     {
       "id": "platform_height_classify_corners",
@@ -215,17 +226,6 @@
       "source_location": "L214"
     },
     {
-      "id": "platform_height_platformheightestimator_ground_xy_mm",
-      "label": ".ground_xy_mm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "code",
-      "norm_label": ".ground_xy_mm()",
-      "source_file": "platform_height.py",
-      "source_location": "L170"
-    },
-    {
       "id": "platform_height_platformheightestimator_init",
       "label": ".__init__()",
       "_callable": true,
@@ -246,17 +246,6 @@
       "norm_label": ".point3d_mm()",
       "source_file": "platform_height.py",
       "source_location": "L189"
-    },
-    {
-      "id": "platform_height_platformheightestimator_ray_world",
-      "label": "._ray_world()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "code",
-      "norm_label": "._ray_world()",
-      "source_file": "platform_height.py",
-      "source_location": "L160"
     },
     {
       "id": "platform_height_solve_marker_camera_point",
@@ -435,11 +424,22 @@
       "source_location": "L72"
     },
     {
+      "id": "calibrate_table_pose_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "calibrate_table_pose.py",
+      "source_location": "L35"
+    },
+    {
       "id": "detect_find_blobs",
       "label": "find_blobs()",
       "_callable": true,
       "_origin": "ast",
-      "community": 10,
+      "community": 11,
       "file_type": "code",
       "norm_label": "find_blobs()",
       "source_file": "detect.py",
@@ -450,7 +450,7 @@
       "label": "send()",
       "_callable": true,
       "_origin": "ast",
-      "community": 10,
+      "community": 11,
       "file_type": "code",
       "norm_label": "send()",
       "source_file": "detect.py",
@@ -461,7 +461,7 @@
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
-      "community": 11,
+      "community": 12,
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "generate_aruco_tags.py",
@@ -842,26 +842,37 @@
       "source_location": "L47"
     },
     {
-      "id": "calibrate_iphone_main",
-      "label": "main()",
+      "id": "platform_height_platformheightestimator_ground_xy_mm",
+      "label": ".ground_xy_mm()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "calibrate_iphone.py",
-      "source_location": "L53"
+      "norm_label": ".ground_xy_mm()",
+      "source_file": "platform_height.py",
+      "source_location": "L170"
     },
     {
-      "id": "calibrate_table_pose_main",
+      "id": "platform_height_platformheightestimator_ray_world",
+      "label": "._ray_world()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "code",
+      "norm_label": "._ray_world()",
+      "source_file": "platform_height.py",
+      "source_location": "L160"
+    },
+    {
+      "id": "calibrate_iphone_main",
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
       "file_type": "code",
       "norm_label": "main()",
-      "source_file": "calibrate_table_pose.py",
-      "source_location": "L35"
+      "source_file": "calibrate_iphone.py",
+      "source_location": "L53"
     },
     {
       "id": "detect_platform_aruco",
@@ -894,6 +905,16 @@
       "source_location": "L1"
     },
     {
+      "id": "detect_platform_aruco_rationale_101",
+      "label": "True in-plane rotation of an ArUco tag, 0..360, from its corners. cv2.aruco\u2026",
+      "_origin": "ast",
+      "community": 0,
+      "file_type": "rationale",
+      "norm_label": "true in-plane rotation of an aruco tag, 0..360, from its corners. cv2.aruco...",
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L101"
+    },
+    {
       "id": "platform_height_rationale_1",
       "label": "platform_height.py \u2014 real-world X/Y/Z for a block seen by a SINGLE angled\u2026",
       "_origin": "ast",
@@ -922,26 +943,6 @@
       "norm_label": "real x/y/z for pixels in the dji frame, given a solved platform pose.",
       "source_file": "platform_height.py",
       "source_location": "L147"
-    },
-    {
-      "id": "platform_height_rationale_161",
-      "label": "Undistorted camera ray through pixel (px,py), as a WORLD-space direction vector\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "rationale",
-      "norm_label": "undistorted camera ray through pixel (px,py), as a world-space direction vector...",
-      "source_file": "platform_height.py",
-      "source_location": "L161"
-    },
-    {
-      "id": "platform_height_rationale_171",
-      "label": "EXACT real-world (X, Y) in mm, platform-relative, for a pixel that lies ON the\u2026",
-      "_origin": "ast",
-      "community": 0,
-      "file_type": "rationale",
-      "norm_label": "exact real-world (x, y) in mm, platform-relative, for a pixel that lies on the...",
-      "source_file": "platform_height.py",
-      "source_location": "L171"
     },
     {
       "id": "platform_height_rationale_190",
@@ -1134,10 +1135,30 @@
       "source_location": "L1"
     },
     {
+      "id": "calibrate_table_pose",
+      "label": "calibrate_table_pose.py",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "norm_label": "calibrate_table_pose.py",
+      "source_file": "calibrate_table_pose.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "calibrate_table_pose_rationale_1",
+      "label": "calibrate_table_pose.py \u2014 step 2 of 2 for real height tracking. Finds the\u2026",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "rationale",
+      "norm_label": "calibrate_table_pose.py \u2014 step 2 of 2 for real height tracking. finds the...",
+      "source_file": "calibrate_table_pose.py",
+      "source_location": "L1"
+    },
+    {
       "id": "detect",
       "label": "detect.py",
       "_origin": "ast",
-      "community": 10,
+      "community": 11,
       "file_type": "code",
       "norm_label": "detect.py",
       "source_file": "detect.py",
@@ -1147,7 +1168,7 @@
       "id": "generate_aruco_tags",
       "label": "generate_aruco_tags.py",
       "_origin": "ast",
-      "community": 11,
+      "community": 12,
       "file_type": "code",
       "norm_label": "generate_aruco_tags.py",
       "source_file": "generate_aruco_tags.py",
@@ -1157,7 +1178,7 @@
       "id": "generate_aruco_tags_rationale_1",
       "label": "generate_aruco_tags.py \u2014 generates printable ArUco tags of an EXACTLY known\u2026",
       "_origin": "ast",
-      "community": 11,
+      "community": 12,
       "file_type": "rationale",
       "norm_label": "generate_aruco_tags.py \u2014 generates printable aruco tags of an exactly known...",
       "source_file": "generate_aruco_tags.py",
@@ -1167,7 +1188,7 @@
       "id": "github_scripts_graphify_ci_build",
       "label": "graphify_ci_build.py",
       "_origin": "ast",
-      "community": 12,
+      "community": 13,
       "file_type": "code",
       "norm_label": "graphify_ci_build.py",
       "source_file": ".github/scripts/graphify_ci_build.py",
@@ -1177,7 +1198,7 @@
       "id": "github_scripts_graphify_ci_build_rationale_1",
       "label": "Code-only graphify rebuild for CI. No LLM key available here, so semantic\u2026",
       "_origin": "ast",
-      "community": 12,
+      "community": 13,
       "file_type": "rationale",
       "norm_label": "code-only graphify rebuild for ci. no llm key available here, so semantic...",
       "source_file": ".github/scripts/graphify_ci_build.py",
@@ -1187,7 +1208,7 @@
       "id": "inspect_bp",
       "label": "inspect_bp.py",
       "_origin": "ast",
-      "community": 13,
+      "community": 14,
       "file_type": "code",
       "norm_label": "inspect_bp.py",
       "source_file": "inspect_bp.py",
@@ -1197,7 +1218,7 @@
       "id": "inspect_bp_rationale_1",
       "label": "inspect_bp.py -- Deep probe of graph accessibility. Run: py \"H:/Unreal + Ai\u2026",
       "_origin": "ast",
-      "community": 13,
+      "community": 14,
       "file_type": "rationale",
       "norm_label": "inspect_bp.py -- deep probe of graph accessibility. run: py \"h:/unreal + ai...",
       "source_file": "inspect_bp.py",
@@ -1474,10 +1495,30 @@
       "source_location": "L55"
     },
     {
+      "id": "platform_height_rationale_161",
+      "label": "Undistorted camera ray through pixel (px,py), as a WORLD-space direction vector\u2026",
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "rationale",
+      "norm_label": "undistorted camera ray through pixel (px,py), as a world-space direction vector...",
+      "source_file": "platform_height.py",
+      "source_location": "L161"
+    },
+    {
+      "id": "platform_height_rationale_171",
+      "label": "EXACT real-world (X, Y) in mm, platform-relative, for a pixel that lies ON the\u2026",
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "rationale",
+      "norm_label": "exact real-world (x, y) in mm, platform-relative, for a pixel that lies on the...",
+      "source_file": "platform_height.py",
+      "source_location": "L171"
+    },
+    {
       "id": "calibrate_iphone",
       "label": "calibrate_iphone.py",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "norm_label": "calibrate_iphone.py",
       "source_file": "calibrate_iphone.py",
@@ -1487,30 +1528,10 @@
       "id": "calibrate_iphone_rationale_1",
       "label": "calibrate_iphone.py \u2014 one-time intrinsics calibration for the SIDE camera (the\u2026",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "rationale",
       "norm_label": "calibrate_iphone.py \u2014 one-time intrinsics calibration for the side camera (the...",
       "source_file": "calibrate_iphone.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "calibrate_table_pose",
-      "label": "calibrate_table_pose.py",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "norm_label": "calibrate_table_pose.py",
-      "source_file": "calibrate_table_pose.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "calibrate_table_pose_rationale_1",
-      "label": "calibrate_table_pose.py \u2014 step 2 of 2 for real height tracking. Finds the\u2026",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "rationale",
-      "norm_label": "calibrate_table_pose.py \u2014 step 2 of 2 for real height tracking. finds the...",
-      "source_file": "calibrate_table_pose.py",
       "source_location": "L1"
     },
     {
@@ -1518,7 +1539,7 @@
       "label": "WorldGridMaterial Shader (DDC Key)",
       "author": null,
       "captured_at": null,
-      "community": 14,
+      "community": 15,
       "contributor": null,
       "file_type": "code",
       "norm_label": "worldgridmaterial shader (ddc key)",
@@ -1531,7 +1552,7 @@
       "label": "Digital Twin Scene Screenshot",
       "author": null,
       "captured_at": null,
-      "community": 14,
+      "community": 15,
       "contributor": null,
       "file_type": "image",
       "norm_label": "digital twin scene screenshot",
@@ -1865,7 +1886,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L120",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -1877,7 +1898,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L122",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -1889,7 +1910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L135",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -1901,7 +1922,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L137",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -1913,7 +1934,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L139",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -1925,7 +1946,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L141",
+      "source_location": "L168",
       "weight": 1.0
     },
     {
@@ -1937,7 +1958,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L151",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -1949,7 +1970,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L166",
+      "source_location": "L193",
+      "weight": 1.0
+    },
+    {
+      "source": "detect_platform_aruco_main",
+      "target": "detect_platform_aruco_marker_angle_deg",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -1961,7 +1994,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L104",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -2333,7 +2366,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2345,7 +2378,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2357,7 +2390,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2369,7 +2402,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2381,7 +2414,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2393,7 +2426,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2477,7 +2510,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -2717,13 +2750,35 @@
     },
     {
       "source": "detect_platform_aruco",
+      "target": "detect_platform_aruco_marker_angle_deg",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "detect_platform_aruco",
+      "target": "detect_platform_aruco_slot",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "detect_platform_aruco",
       "target": "detect_platform_aruco_main",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L111",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -2734,23 +2789,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L71",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
       "source": "detect_platform_aruco",
       "target": "detect_platform_aruco_ema",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "detect_platform_aruco.py",
-      "source_location": "L92",
-      "weight": 1.0
-    },
-    {
-      "source": "detect_platform_aruco",
-      "target": "detect_platform_aruco_slot",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3168,24 +3212,24 @@
     },
     {
       "source": "detect_platform_aruco_slot",
-      "target": "detect_platform_aruco_slot_update",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "detect_platform_aruco.py",
-      "source_location": "L103",
-      "weight": 1.0
-    },
-    {
-      "source": "detect_platform_aruco_slot",
       "target": "detect_platform_aruco_slot_init",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "detect_platform_aruco.py",
-      "source_location": "L97",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "detect_platform_aruco_slot",
+      "target": "detect_platform_aruco_slot_update",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -3516,6 +3560,17 @@
       "confidence_score": 1.0,
       "source_file": "detect_platform_aruco.py",
       "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "detect_platform_aruco_rationale_101",
+      "target": "detect_platform_aruco_marker_angle_deg",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "detect_platform_aruco.py",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -4079,5 +4134,5 @@
       "source_file": "tasks/README.md"
     }
   ],
-  "built_at_commit": "90c347c0bb62d81faae940bcbb7e82c9ad1099cd"
+  "built_at_commit": "adc9cf4f6ab96d15b5c13a9945925e8898585d5d"
 }

@@ -1,10 +1,10 @@
 # Graph Report - rice-unreal-jam  (2026-08-20)
 
 ## Corpus Check
-- Corpus is ~25,633 words - fits in a single context window. You may not need a graph.
+- Corpus is ~25,849 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 158 nodes · 207 edges · 15 communities (9 shown, 6 thin omitted)
+- 160 nodes · 210 edges · 16 communities (9 shown, 7 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -19,15 +19,16 @@
 - Blueprint Inspection Tool
 - README OSC Networking
 - OSC Send Test Script
-- Community 11
+- Community 10
 - Community 12
 - Community 13
 - Community 14
+- Community 15
 
 ## God Nodes (most connected - your core abstractions)
 1. `DepthEstimator` - 16 edges
 2. `PlatformHeightEstimator` - 11 edges
-3. `main()` - 9 edges
+3. `main()` - 10 edges
 4. `main()` - 8 edges
 5. `Slot` - 7 edges
 6. `find_platform_corners()` - 7 edges
@@ -54,11 +55,11 @@
 ## Hyperedges (group relationships)
 - **Task Filing Workflow** — agents_task_workflow, tasks_readme_doc, tasks_readme_task_lifecycle, tasks_template_doc [EXTRACTED 1.00]
 
-## Communities (15 total, 6 thin omitted)
+## Communities (16 total, 7 thin omitted)
 
 ### Community 0 - "AGENTS.md Collaboration Guide"
-Cohesion: 0.09
-Nodes (24): _ema(), load_or_guess_intrinsics(), main(), detect_platform_aruco.py — accurate single-camera (DJI) X/Y/Z tracker using…, Slot, _classify_corners(), detect_markers(), find_platform_corners() (+16 more)
+Cohesion: 0.10
+Nodes (24): _ema(), load_or_guess_intrinsics(), main(), marker_angle_deg(), detect_platform_aruco.py — accurate single-camera (DJI) X/Y/Z tracker using…, True in-plane rotation of an ArUco tag, 0..360, from its corners. cv2.aruco…, Slot, _classify_corners() (+16 more)
 
 ### Community 1 - "Task Filing Workflow"
 Cohesion: 0.09
@@ -91,18 +92,18 @@ Nodes (5): FakeBlock, main(), make_names(), send_test.py - fake tracker, for tes
 ## Knowledge Gaps
 - **7 isolated node(s):** `MechTwin03`, `send_test.py`, `inspect_bp.py`, `OSC Protocol Link`, `Git LFS Usage` (+2 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `DepthEstimator` connect `Task Filing Workflow` to `Marker Detection Pipeline`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
-- **Why does `PlatformHeightEstimator` connect `AGENTS.md Collaboration Guide` to `README Project Setup`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+- **Why does `PlatformHeightEstimator` connect `AGENTS.md Collaboration Guide` to `README OSC Networking`, `README Project Setup`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **What connects `MechTwin03`, `send_test.py`, `inspect_bp.py` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `AGENTS.md Collaboration Guide` be split into smaller, more focused modules?**
-  _Cohesion score 0.0946969696969697 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1032258064516129 - nodes in this community are weakly interconnected._
 - **Should `Task Filing Workflow` be split into smaller, more focused modules?**
   _Cohesion score 0.08547008547008547 - nodes in this community are weakly interconnected._
