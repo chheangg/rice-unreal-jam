@@ -30,6 +30,7 @@ Run:
     python lego_locator.py "clip.mp4"                        # a recorded file
 """
 
+import math
 import sys
 import time
 
@@ -53,7 +54,13 @@ DEFAULT_S_FLOOR = 140      # saturation minimum - the main skin-rejection knob
 DEFAULT_V_FLOOR = 70       # brightness minimum - drops dark shadow
 DEFAULT_MIN_AREA_100 = 8   # min blob area, in units of 100 px^2 -> 800 px^2
 
-KERNEL = np.ones((5, 5), np.uint8)
+KERNEL = np.ones((5, 5), np.uint8)          # open: kills small speckle
+# close uses a bigger kernel to BRIDGE gaps that split a piece into fragments
+# at distance (where it subtends few pixels and lighting punches holes in the
+# mask). Without this, a far piece breaks into pieces and its measured size
+# halves. Keep it smaller than the spacing between separate pieces so it
+# doesn't merge two of them.
+CLOSE_KERNEL = np.ones((13, 13), np.uint8)
 
 
 def as_source(text):
@@ -61,6 +68,48 @@ def as_source(text):
         return int(text)
     except ValueError:
         return text
+
+
+# Shape thresholds - tune if a shape is mislabelled under your pieces/lighting.
+CROSS_SOLIDITY = 0.80      # below this = concave (a cross has notches)
+CIRCLE_CIRCULARITY = 0.82  # above this = round
+SQUARE_ASPECT = 1.25       # long/short side <= this = square, else rectangle
+
+
+def classify_shape(contour):
+    """
+    Label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'.
+
+    Features:
+      solidity    = area / convex-hull area. A cross is concave - its notches
+                    make the hull much bigger than the shape - so solidity is
+                    low (~0.6-0.7). Square/rectangle/circle are convex (~0.95+).
+      circularity = 4*pi*area / perimeter^2. A circle ~1.0, a rectangle ~0.79.
+      aspect      = long side / short side of the min-area rect. ~1 is a
+                    square; larger is a rectangle.
+    So: low solidity -> cross; else round -> circle; else 4-ish corners ->
+    square vs rectangle by aspect.
+    """
+    area = cv2.contourArea(contour)
+    peri = cv2.arcLength(contour, True)
+    if area < 1.0 or peri <= 0:
+        return "?"
+    circularity = 4.0 * math.pi * area / (peri * peri)
+    hull_area = cv2.contourArea(cv2.convexHull(contour))
+    solidity = area / hull_area if hull_area > 0 else 1.0
+    n = len(cv2.approxPolyDP(contour, 0.03 * peri, True))
+
+    if solidity < CROSS_SOLIDITY:
+        return "cross"                 # concave -> plus/cross
+    if circularity >= CIRCLE_CIRCULARITY and n >= 7:
+        return "circle"                # round and many-sided
+    if n <= 6:                         # convex quad-ish -> square or rectangle
+        (_, (rw, rh), _) = cv2.minAreaRect(contour)
+        short = min(rw, rh)
+        if short <= 0:
+            return "square"
+        return "square" if (max(rw, rh) / short) <= SQUARE_ASPECT else "rectangle"
+    return "circle" if circularity >= CIRCLE_CIRCULARITY else "?"
 
 
 def color_mask(hsv, color, s_floor, v_floor):
@@ -71,9 +120,10 @@ def color_mask(hsv, color, s_floor, v_floor):
         hi = np.array((hi_h, 255, 255))
         m = cv2.inRange(hsv, lo, hi)
         mask = m if mask is None else (mask | m)
-    # open removes speckle, close fills pinholes inside a brick
+    # open removes speckle; close (bigger kernel) bridges gaps so a piece stays
+    # ONE blob even at distance, instead of fragmenting and halving its size
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, KERNEL)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, KERNEL)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, CLOSE_KERNEL)
     return mask
 
 
@@ -126,12 +176,12 @@ def main():
             cnt = pieces[c["name"]]
             counts[c["name"]] = len(cnt)
             for ct in cnt:
-                x, y, w, h = cv2.boundingRect(ct)
+                x, y, w, h = cv2.boundingRect(ct)   # anchors the text label
                 (cx, cy), (rw, rh), _ = cv2.minAreaRect(ct)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), c["draw"], 2)
-                cv2.putText(frame, f"{c['name']} {int(rw)}x{int(rh)}",
-                            (x, y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            c["draw"], 2)
+                cv2.drawContours(frame, [ct], -1, c["draw"], 2)  # real outline
+                cv2.putText(frame, f"{c['name']}/{classify_shape(ct)} "
+                            f"{int(rw)}x{int(rh)}", (x, y - 8),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, c["draw"], 2)
 
         # HUD
         now = time.time()

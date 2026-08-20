@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+# vendored DA3 checkout (has its own .git; install per README instead)
+Depth-Anything-3/
+
+# per-rig locked sizes, written at runtime by lego_locator_xyz.py --size-file
+sizes.json
