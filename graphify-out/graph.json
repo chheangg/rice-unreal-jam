@@ -107,7 +107,7 @@
       "file_type": "code",
       "norm_label": ".has_depth()",
       "source_file": "depth_estimator.py",
-      "source_location": "L141"
+      "source_location": "L153"
     },
     {
       "id": "depth_estimator_depthestimator_stop",
@@ -118,7 +118,7 @@
       "file_type": "code",
       "norm_label": ".stop()",
       "source_file": "depth_estimator.py",
-      "source_location": "L102"
+      "source_location": "L106"
     },
     {
       "id": "depth_estimator_depthestimator_infer",
@@ -129,7 +129,7 @@
       "file_type": "code",
       "norm_label": "._infer()",
       "source_file": "depth_estimator.py",
-      "source_location": "L165"
+      "source_location": "L178"
     },
     {
       "id": "depth_estimator_depthestimator_run",
@@ -140,7 +140,7 @@
       "file_type": "code",
       "norm_label": "._run()",
       "source_file": "depth_estimator.py",
-      "source_location": "L146"
+      "source_location": "L158"
     },
     {
       "id": "depth_estimator_depthestimator_init",
@@ -162,7 +162,7 @@
       "file_type": "code",
       "norm_label": "._load()",
       "source_file": "depth_estimator.py",
-      "source_location": "L58"
+      "source_location": "L62"
     },
     {
       "id": "depth_estimator_depthestimator_depth_at",
@@ -173,7 +173,7 @@
       "file_type": "code",
       "norm_label": ".depth_at()",
       "source_file": "depth_estimator.py",
-      "source_location": "L119"
+      "source_location": "L123"
     },
     {
       "id": "depth_estimator_depthestimator_start",
@@ -184,7 +184,7 @@
       "file_type": "code",
       "norm_label": ".start()",
       "source_file": "depth_estimator.py",
-      "source_location": "L95"
+      "source_location": "L99"
     },
     {
       "id": "depth_estimator_depthestimator_submit",
@@ -195,7 +195,7 @@
       "file_type": "code",
       "norm_label": ".submit()",
       "source_file": "depth_estimator.py",
-      "source_location": "L109"
+      "source_location": "L113"
     },
     {
       "id": "depth_estimator",
@@ -228,14 +228,14 @@
       "source_location": "L1"
     },
     {
-      "id": "depth_estimator_rationale_185",
+      "id": "depth_estimator_rationale_198",
       "label": "# NOTE: absolute scale can still need per-rig calibration \u2014 tune",
       "_origin": "ast",
       "community": 1,
       "file_type": "rationale",
       "norm_label": "# note: absolute scale can still need per-rig calibration \u2014 tune",
       "source_file": "depth_estimator.py",
-      "source_location": "L185"
+      "source_location": "L198"
     },
     {
       "id": "detect_xyz_rationale_1",
@@ -308,14 +308,14 @@
       "source_location": "L1"
     },
     {
-      "id": "depth_estimator_rationale_166",
+      "id": "depth_estimator_rationale_179",
       "label": "Run DA3 on one RGB frame -> metric depth map (HxW float32, meters).",
       "_origin": "ast",
       "community": 5,
       "file_type": "rationale",
       "norm_label": "run da3 on one rgb frame -> metric depth map (hxw float32, meters).",
       "source_file": "depth_estimator.py",
-      "source_location": "L166"
+      "source_location": "L179"
     },
     {
       "id": "depth_estimator_rationale_34",
@@ -328,34 +328,34 @@
       "source_location": "L34"
     },
     {
-      "id": "depth_estimator_rationale_120",
+      "id": "depth_estimator_rationale_124",
       "label": "Median metric depth (meters) over an axis-aligned bounding box `box = (x, y, w,\u2026",
       "_origin": "ast",
       "community": 7,
       "file_type": "rationale",
       "norm_label": "median metric depth (meters) over an axis-aligned bounding box `box = (x, y, w,...",
       "source_file": "depth_estimator.py",
-      "source_location": "L120"
+      "source_location": "L124"
     },
     {
-      "id": "depth_estimator_rationale_96",
+      "id": "depth_estimator_rationale_100",
       "label": "Launch the background inference worker (no-op if unavailable).",
       "_origin": "ast",
       "community": 8,
       "file_type": "rationale",
       "norm_label": "launch the background inference worker (no-op if unavailable).",
       "source_file": "depth_estimator.py",
-      "source_location": "L96"
+      "source_location": "L100"
     },
     {
-      "id": "depth_estimator_rationale_110",
+      "id": "depth_estimator_rationale_114",
       "label": "Hand the worker the latest frame (BGR, as OpenCV gives it).",
       "_origin": "ast",
       "community": 9,
       "file_type": "rationale",
       "norm_label": "hand the worker the latest frame (bgr, as opencv gives it).",
       "source_file": "depth_estimator.py",
-      "source_location": "L110"
+      "source_location": "L114"
     },
     {
       "id": "agents_detect_py",
@@ -589,7 +589,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "depth_estimator.py",
-      "source_location": "L55",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -601,7 +601,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "depth_estimator.py",
-      "source_location": "L158",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -713,7 +713,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L102",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -724,7 +724,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L109",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -735,7 +735,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L119",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -746,7 +746,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L141",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -757,7 +757,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L146",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -768,7 +768,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L165",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -790,7 +790,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L58",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -801,7 +801,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L95",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -816,47 +816,58 @@
       "weight": 1.0
     },
     {
-      "source": "depth_estimator_rationale_110",
+      "source": "depth_estimator_rationale_100",
+      "target": "depth_estimator_depthestimator_start",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "depth_estimator.py",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "depth_estimator_rationale_114",
       "target": "depth_estimator_depthestimator_submit",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L110",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
-      "source": "depth_estimator_rationale_120",
+      "source": "depth_estimator_rationale_124",
       "target": "depth_estimator_depthestimator_depth_at",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L120",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
-      "source": "depth_estimator_rationale_166",
+      "source": "depth_estimator_rationale_179",
       "target": "depth_estimator_depthestimator_infer",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L166",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
-      "source": "depth_estimator_rationale_185",
+      "source": "depth_estimator_rationale_198",
       "target": "depth_estimator",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
-      "source_location": "L185",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -868,17 +879,6 @@
       "confidence_score": 1.0,
       "source_file": "depth_estimator.py",
       "source_location": "L34",
-      "weight": 1.0
-    },
-    {
-      "source": "depth_estimator_rationale_96",
-      "target": "depth_estimator_depthestimator_start",
-      "relation": "rationale_for",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "depth_estimator.py",
-      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -1101,5 +1101,5 @@
       "source_file": "tasks/README.md"
     }
   ],
-  "built_at_commit": "ffa60fc81a8b7e05eacea0ec160c189f21b143e2"
+  "built_at_commit": "fb0640a1f14d621448f4be7cddec009e4846ead6"
 }

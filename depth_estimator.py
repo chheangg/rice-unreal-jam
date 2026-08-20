@@ -44,6 +44,10 @@ class DepthEstimator:
 
         self._model = None
         self._depth = None          # latest metric depth map, HxW float32 (meters)
+        self._depth_src_shape = None  # (H, W) of the frame that produced _depth -
+                                       # DA3 runs inference at a resized resolution,
+                                       # so depth_at() needs this to map a box given
+                                       # in original-frame pixels into depth-map pixels.
         self._depth_lock = threading.Lock()
         self._latest_frame = None   # newest RGB frame handed in by the caller
         self._frame_lock = threading.Lock()
@@ -119,17 +123,25 @@ class DepthEstimator:
     def depth_at(self, box):
         """
         Median metric depth (meters) over an axis-aligned bounding box
-        `box = (x, y, w, h)`. Returns None if no depth is available yet.
-        Median over the box is robust to a few bad pixels / edges.
+        `box = (x, y, w, h)`, given in the ORIGINAL camera frame's pixel
+        coordinates (i.e. what detect_xyz.py's blob boxes are in). Returns
+        None if no depth is available yet. Median over the box is robust to
+        a few bad pixels / edges.
         """
         with self._depth_lock:
             depth = self._depth
-        if depth is None:
+            src_shape = self._depth_src_shape
+        if depth is None or src_shape is None:
             return None
         H, W = depth.shape
+        src_H, src_W = src_shape
+        # DA3 runs inference on a resized copy of the frame, so the depth map's
+        # resolution differs from the source frame's - scale the box into
+        # depth-map pixel space before indexing (see #DA3-depth-scale-mismatch).
+        sx, sy = W / src_W, H / src_H
         x, y, w, h = box
-        x0, y0 = max(0, int(x)), max(0, int(y))
-        x1, y1 = min(W, int(x + w)), min(H, int(y + h))
+        x0, y0 = max(0, int(x * sx)), max(0, int(y * sy))
+        x1, y1 = min(W, int((x + w) * sx)), min(H, int((y + h) * sy))
         if x1 <= x0 or y1 <= y0:
             return None
         patch = depth[y0:y1, x0:x1]
@@ -158,6 +170,7 @@ class DepthEstimator:
                 depth = self._infer(frame)
                 with self._depth_lock:
                     self._depth = depth
+                    self._depth_src_shape = frame.shape[:2]
             except Exception as e:
                 self.last_error = repr(e)
                 print(f"[depth] inference error: {e}")
