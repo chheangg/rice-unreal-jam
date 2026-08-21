@@ -245,6 +245,39 @@ correct "drop stale frames, keep only the newest" behavior described in
 the module's own docstring, not a race. No changes needed here; this
 section exists to record that the check was actually done.
 
+## 10. `detect.py`/`detect_xyz.py` opened a real camera (and loaded DA3) as an import side effect — FIXED
+
+Both scripts had `cap = cv2.VideoCapture(0)` — and `detect_xyz.py` also had
+`depth = DepthEstimator()` (which loads/downloads a DA3 checkpoint) —
+sitting at **module level**, with no `if __name__ == "__main__":` guard.
+Every other camera-touching script in the repo (`lego_locator.py`,
+`lego_locator_xyz.py`, `camera_probe.py`, `detect_stereo.py`,
+`detect_platform.py`, `detect_platform_aruco.py`, `calibrate_iphone.py`,
+`calibrate_table_pose.py` — checked all of them) already guards its
+`VideoCapture` call inside `main()`/behind the `__name__` check; these two
+were the only outliers.
+
+**Why this matters:** a bare `import detect` or `import detect_xyz` from
+*anywhere* — an IDE's autocomplete indexer, a linter, a future test suite,
+another script importing `find_blobs` for reuse — would silently open a
+real camera device (and, for `detect_xyz`, start a model download) with no
+explicit call, violating this session's own "never open a real camera"
+constraint just by being imported. This session confirmed it never
+triggered that (only used `py_compile`, which doesn't execute module code,
+until after the fix was applied and verified safe).
+
+**Fixed this session:** both files now wrap their capture-open/loop/cleanup
+in `main()`, guarded by `if __name__ == "__main__":`, matching every other
+script in the repo. `detect_xyz.py`'s `send()` now takes `depth` as a
+parameter instead of reading a module-level global, since `depth` moved
+inside `main()`. Confirmed both modules now import in well under 5 seconds
+with no camera/model side effects — see
+`tests/test_detect_import_safety.py` (6 tests: import-safety timing for
+both files, plus `find_blobs()` correctness on synthetic HSV data,
+including the same red-hue-wrap edge case already covered for
+`lego_locator.py`). Behavior when actually run as a script
+(`python detect.py`) is unchanged — this was a pure refactor.
+
 ## Not investigated (would need a live camera or Unreal Editor — out of
 scope for this session per its hard constraints)
 
