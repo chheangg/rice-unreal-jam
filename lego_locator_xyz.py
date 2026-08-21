@@ -39,7 +39,26 @@ number is supposed to be immune to. Three changes make the size constant:
      briefly lost, the same brick comes back with the SAME numbers instead of
      being re-measured at its new distance. --size-file persists the book
      across runs, so the very first measurement can be the only one you ever
-     make.
+     make. Each colour+shape holds a LIST of known sizes, matched by the
+     piece's own rough measurement, so two yellow rectangles of different
+     sizes stay two different bricks instead of one adopting the other's
+     centimetres (and, through them, the other's depth).
+
+Several pieces at once
+----------------------
+Every piece the camera can see gets its own track and its own stable name
+(`yellow1`, `yellow2`, `red1`, ...), including several of the SAME colour. The
+matching is done a whole frame at a time - all blobs of a colour are scored
+against the tracks' previous positions, then assigned nearest-first with each
+track claimable once. Matching them one blob at a time instead lets two nearby
+bricks claim the same track (and the first claim drags that track onto the
+first brick, so the second claims it too), which collapses them into a single
+piece that reports one position, one size and one depth. See Tracks for the
+long version.
+
+Unreal is the narrower end: BP_OSCreciver has four pre-placed cubes and no
+spawn path, so it can show three yellows and one red. The bridge leases those
+cubes to tracked pieces and says on stdout what it had to drop.
 
 Depth then rides on the size, not the other way round: for a locked piece,
 z = (long_cm/100) * f / long_px. That inverts cleanly, is smooth frame to
@@ -228,22 +247,40 @@ class SizeBook:
     are on an 8 mm pitch, so --snap-mm 8 turns "3.1 x 1.6 cm" into a clean
     "3.2 x 1.6 cm" and kills the last of the measurement noise.
     """
-    def __init__(self, snap_mm=0.0, path=None):
+    def __init__(self, snap_mm=0.0, path=None, tol_cm=0.6):
         self.snap_mm = float(snap_mm)
+        self.tol_cm = float(tol_cm)
         self.path = path
-        self.book = {}                    # "colour/shape" -> [long_cm, short_cm]
+        # "colour/shape" -> [[long_cm, short_cm], ...]. A LIST, because two
+        # yellow rectangles on the table can be genuinely different bricks:
+        # keying one size per colour+shape made the second piece adopt the
+        # first one's centimetres, which is wrong and also poisons its depth
+        # (z is derived from the locked size).
+        self.book = {}
         if path and os.path.exists(path):
             try:
                 with open(path) as fh:
-                    self.book = {k: [float(v[0]), float(v[1])]
+                    self.book = {k: self._as_entries(v)
                                  for k, v in json.load(fh).items()}
-                print(f"[size] loaded {len(self.book)} locked sizes from {path}")
+                print(f"[size] loaded {self.count()} locked sizes "
+                      f"({len(self.book)} kinds) from {path}")
             except Exception as e:
                 print(f"[size] could not read {path}: {e}")
 
     @staticmethod
+    def _as_entries(v):
+        """Accept both file layouts: [long, short] (old, one size per kind)
+        and [[long, short], ...] (current). Old size files keep working."""
+        if v and isinstance(v[0], (int, float)):
+            return [[float(v[0]), float(v[1])]]
+        return [[float(a), float(b)] for a, b in v]
+
+    @staticmethod
     def _key(color, shape):
         return f"{color}/{shape or '?'}"
+
+    def count(self):
+        return sum(len(v) for v in self.book.values())
 
     def _snap(self, cm):
         if self.snap_mm <= 0:
@@ -251,12 +288,26 @@ class SizeBook:
         step = self.snap_mm / 10.0                     # mm -> cm
         return max(step, round(cm / step) * step)
 
-    def get(self, color, shape):
-        """Locked (long_cm, short_cm) for this kind of piece, or None."""
+    def get(self, color, shape, hint_long_cm=None):
+        """Locked (long_cm, short_cm) for this piece, or None.
+
+        hint_long_cm is the piece's own rough measurement, used to pick WHICH
+        of several same-colour/same-shape bricks this one is. Without a hint we
+        can only answer when there is exactly one candidate - otherwise we'd be
+        guessing, and guessing here is what made two different bricks read as
+        the same size.
+        """
         if not shape or shape == "?":                  # don't key off an unknown
             return None
-        v = self.book.get(self._key(color, shape))
-        return (v[0], v[1]) if v else None
+        entries = self.book.get(self._key(color, shape))
+        if not entries:
+            return None
+        if hint_long_cm is None:
+            return tuple(entries[0]) if len(entries) == 1 else None
+        best = min(entries, key=lambda e: abs(e[0] - hint_long_cm))
+        if abs(best[0] - hint_long_cm) > self.tol_cm:
+            return None                                # a brick we've not met
+        return tuple(best)
 
     def put(self, color, shape, long_cm, short_cm):
         if not shape or shape == "?":
@@ -264,15 +315,25 @@ class SizeBook:
         lo, sh = self._snap(long_cm), self._snap(short_cm)
         if sh > lo:
             lo, sh = sh, lo
-        self.book[self._key(color, shape)] = [lo, sh]
+        key = self._key(color, shape)
+        entries = self.book.setdefault(key, [])
+        for e in entries:
+            if abs(e[0] - lo) <= self.tol_cm:
+                return tuple(e)                        # already know this brick
+        entries.append([lo, sh])
+        entries.sort()
         self.save()
-        print(f"[size] locked {self._key(color, shape)} = {lo:.2f} x {sh:.2f} cm")
+        print(f"[size] locked {key} = {lo:.2f} x {sh:.2f} cm "
+              f"({len(entries)} distinct size{'s' if len(entries) > 1 else ''} "
+              f"for this kind)")
         return (lo, sh)
 
     def rescale(self, k):
         """Apply an absolute-scale correction to everything already locked."""
-        for key in self.book:
-            self.book[key] = [self.book[key][0] * k, self.book[key][1] * k]
+        for entries in self.book.values():
+            for e in entries:
+                e[0] *= k
+                e[1] *= k
         self.save()
 
     def clear(self):
@@ -291,12 +352,35 @@ class SizeBook:
 
 class Tracks:
     """
-    Tiny per-colour tracker. Pieces are matched to the nearest slot of the same
-    colour within `match_dist` px. Position is NOT smoothed (it already looks
-    good and we want it responsive); depth is lightly smoothed; SIZE is not
-    smoothed at all - it is measured during the settle window, then frozen and
-    handed to the SizeBook, and from then on a piece of that colour+shape
-    adopts the locked size the instant it is seen, at any distance.
+    Per-colour multi-object tracker. Every piece of a colour visible in a frame
+    gets its OWN slot, with a stable name (`yellow1`, `yellow2`, ...) that
+    follows that physical brick for as long as it stays in view.
+
+    Why matching is done a frame at a time
+    --------------------------------------
+    The obvious version - "for each blob, grab the nearest slot" - quietly
+    collapses two pieces into one. Two yellow bricks 60 px apart are both
+    inside the match radius of the same slot, so both claim it; worse, the
+    first claim MOVES that slot onto the first brick, so the second brick is
+    then measured against the already-moved slot and claims it again. The
+    result is one slot reporting the last brick's position, with both bricks
+    sharing one size and one depth. That is what "it only tracks one object at
+    a time" actually was.
+
+    So: gather every blob of a colour first, score all (blob, slot) pairs
+    against the slots' PREVIOUS positions, then hand them out nearest-first
+    with each slot claimable ONCE. Blobs left over are new pieces. This is
+    plain greedy assignment - not optimal the way Hungarian would be, but for a
+    handful of separated bricks the difference never shows, and it costs
+    nothing.
+
+    The match radius also scales with the piece: a brick can only have moved so
+    far between two frames, and a flat 90 px for a 40 px brick is part of what
+    let a neighbour steal its slot.
+
+    Position is NOT smoothed (it already looks good and we want it responsive);
+    depth is lightly smoothed; SIZE is not smoothed at all - it is measured
+    during the settle window, then frozen and handed to the SizeBook.
     """
     def __init__(self, book, alpha=0.25, match_dist=90, max_miss=15,
                  settle_seconds=3.0):
@@ -307,74 +391,129 @@ class Tracks:
         self.settle_seconds = settle_seconds    # a new piece must persist this
                                                 # long before it's "confirmed"
         self.slots = {}                         # colour name -> list of slots
+        self._next_id = {}                      # colour name -> next id number
 
-    def update(self, color, cx, cy, z, long_cm, short_cm, angle=None, shape=None):
+    def _gate(self, long_px):
+        """How far a piece may have travelled since the last frame, in px.
+
+        Capped by the piece's own size: a small brick that appears to have
+        jumped 90 px is far more likely to be a DIFFERENT brick than the same
+        one moving fast.
+        """
+        if not long_px or long_px <= 0:
+            return float(self.match_dist)
+        return max(25.0, min(float(self.match_dist), 1.2 * long_px))
+
+    def update_frame(self, color, dets):
+        """Match every detection of one colour to a slot, one slot per piece.
+
+        dets: [{cx, cy, z, long_cm, short_cm, long_px, angle, shape}]
+        Returns the matching slot for each det, in the same order.
+        """
         now = time.time()
         lst = self.slots.setdefault(color, [])
-        best, best_d = None, 1e9
-        for s in lst:
-            d = math.hypot(s["cx"] - cx, s["cy"] - cy)
-            if d < best_d:
-                best, best_d = s, d
-        if best is None or best_d > self.match_dist:
-            # brand-new piece: start its settle timer, not confirmed yet
-            best = {"cx": cx, "cy": cy, "z": z,
-                    "long_cm": None, "short_cm": None,
-                    "long_samps": deque(maxlen=90), "short_samps": deque(maxlen=90),
-                    "size_locked": False,
-                    "angle": angle, "_phasor": None, "shapes": deque(maxlen=9),
-                    "shape": shape, "miss": 0,
-                    "first_seen": now, "confirmed": False}
-            lst.append(best)
-        best["cx"], best["cy"], best["miss"] = cx, cy, 0
+
+        # Score against the slots' previous positions - nothing moves until
+        # every pair has been scored, so an early claim cannot drag a slot onto
+        # its neighbour and swallow that one too.
+        pairs = []
+        for i, d in enumerate(dets):
+            gate = self._gate(d.get("long_px"))
+            for j, s in enumerate(lst):
+                dist = math.hypot(s["cx"] - d["cx"], s["cy"] - d["cy"])
+                if dist <= gate:
+                    pairs.append((dist, i, j))
+        pairs.sort()
+
+        taken_det, taken_slot, matched = set(), set(), {}
+        for _dist, i, j in pairs:
+            if i in taken_det or j in taken_slot:
+                continue
+            taken_det.add(i)
+            taken_slot.add(j)
+            matched[i] = lst[j]
+
+        out = []
+        for i, d in enumerate(dets):
+            slot = matched.get(i)
+            if slot is None:
+                slot = self._new_slot(color, d, now)
+                lst.append(slot)
+            self._apply(slot, d, now)
+            out.append(slot)
+        return out
+
+    def _new_slot(self, color, d, now):
+        """A piece we have not seen before, with its own stable name."""
+        n = self._next_id.get(color, 0) + 1
+        self._next_id[color] = n
+        return {"name": f"{color}{n}", "color": color, "id": n,
+                "cx": d["cx"], "cy": d["cy"], "z": d["z"],
+                "long_cm": None, "short_cm": None,
+                "long_samps": deque(maxlen=90), "short_samps": deque(maxlen=90),
+                "size_locked": False,
+                "angle": d.get("angle"), "_phasor": None,
+                "shapes": deque(maxlen=9), "shape": d.get("shape"),
+                "miss": 0, "first_seen": now, "confirmed": False,
+                "settle_left": self.settle_seconds}
+
+    def _apply(self, slot, d, now):
+        """Fold one detection into the slot it was matched to."""
+        z, angle, shape = d["z"], d.get("angle"), d.get("shape")
+        long_cm, short_cm = d.get("long_cm"), d.get("short_cm")
+        slot["cx"], slot["cy"], slot["miss"] = d["cx"], d["cy"], 0
 
         if shape and shape != "?":              # majority vote over recent frames
-            best["shapes"].append(shape)
-            best["shape"] = Counter(best["shapes"]).most_common(1)[0][0]
+            slot["shapes"].append(shape)
+            slot["shape"] = Counter(slot["shapes"]).most_common(1)[0][0]
 
         # confirm once it has been seen continuously for settle_seconds. A piece
         # that leaves for > max_miss frames is dropped by age(), so putting a
         # new piece in restarts the timer from scratch.
-        best["settle_left"] = max(0.0, self.settle_seconds
-                                  - (now - best["first_seen"]))
-        if not best["confirmed"] and best["settle_left"] <= 0.0:
-            best["confirmed"] = True
+        slot["settle_left"] = max(0.0, self.settle_seconds
+                                  - (now - slot["first_seen"]))
+        if not slot["confirmed"] and slot["settle_left"] <= 0.0:
+            slot["confirmed"] = True
 
         a = self.alpha
         if z is not None:                       # depth keeps tracking
-            best["z"] = z if best["z"] is None else (1 - a) * best["z"] + a * z
+            slot["z"] = z if slot["z"] is None else (1 - a) * slot["z"] + a * z
 
         # --- size: adopt from the book, else measure once and lock ----------
-        if not best["size_locked"]:
-            known = self.book.get(color, best["shape"])
+        if not slot["size_locked"]:
+            if long_cm is not None:
+                slot["long_samps"].append(long_cm)
+                slot["short_samps"].append(short_cm)
+            # The piece's own rough measurement says WHICH brick of this
+            # colour+shape it is, so two different-sized yellow rectangles no
+            # longer adopt each other's centimetres.
+            hint = float(np.median(slot["long_samps"])) \
+                if slot["long_samps"] else None
+            known = self.book.get(slot["color"], slot["shape"], hint)
             if known is not None:
-                # We've measured this kind of piece before. Take that number
+                # We have measured this brick before. Take that number
                 # verbatim - no re-measuring at the new distance, which is the
                 # whole point: the size is a property of the brick, not of
                 # where it happens to be sitting right now.
-                best["long_cm"], best["short_cm"] = known
-                best["size_locked"] = True
-                best["confirmed"] = True        # nothing left to settle for
-                best["settle_left"] = 0.0
-            else:
-                if long_cm is not None:
-                    best["long_samps"].append(long_cm)
-                    best["short_samps"].append(short_cm)
-                if best["confirmed"] and best["long_samps"]:
-                    # median over the settle window: robust to the frames where
-                    # the mask fragmented or the depth map hiccupped
-                    lo = float(np.median(best["long_samps"]))
-                    sh = float(np.median(best["short_samps"]))
-                    locked = self.book.put(color, best["shape"], lo, sh)
-                    best["long_cm"], best["short_cm"] = locked or (lo, sh)
-                    best["size_locked"] = True
+                slot["long_cm"], slot["short_cm"] = known
+                slot["size_locked"] = True
+                slot["confirmed"] = True        # nothing left to settle for
+                slot["settle_left"] = 0.0
+            elif slot["confirmed"] and slot["long_samps"]:
+                # median over the settle window: robust to the frames where
+                # the mask fragmented or the depth map hiccupped
+                lo = float(np.median(slot["long_samps"]))
+                sh = float(np.median(slot["short_samps"]))
+                locked = self.book.put(slot["color"], slot["shape"], lo, sh)
+                slot["long_cm"], slot["short_cm"] = locked or (lo, sh)
+                slot["size_locked"] = True
 
         if angle is not None:                   # circular EMA (handles 0/360 wrap)
             zc = cmath.exp(1j * math.radians(angle))
-            best["_phasor"] = zc if best["_phasor"] is None \
-                else a * zc + (1 - a) * best["_phasor"]
-            best["angle"] = math.degrees(cmath.phase(best["_phasor"])) % 360.0
-        return best
+            slot["_phasor"] = zc if slot["_phasor"] is None \
+                else a * zc + (1 - a) * slot["_phasor"]
+            slot["angle"] = math.degrees(cmath.phase(slot["_phasor"])) % 360.0
+        return slot
 
     def age(self):
         """Drop slots that haven't been matched for a while."""
@@ -530,8 +669,14 @@ def main():
         osc_dets = []                      # pixel-space, for the Unreal bridge
         biggest = None                     # for 'c' calibration
         for c in COLORS:
+            # PASS 1 - measure every blob of this colour and touch no tracker
+            # state at all. Every blob has to be scored against the slots'
+            # PREVIOUS positions, so nothing may move until they are all in
+            # hand; doing this inline (measure one, match it, measure the next)
+            # is what let two neighbouring pieces end up sharing one slot.
+            dets = []
             for ct in pieces[c["name"]]:
-                x, y, w, h = cv2.boundingRect(ct)   # still used to anchor text
+                x, y = cv2.boundingRect(ct)[:2]     # still used to anchor text
                 (u, v), (rw, rh), _ = cv2.minAreaRect(ct)
                 # Rotation-invariant sides: minAreaRect swaps w/h as the piece
                 # turns past 45 deg, so never report those two directly.
@@ -558,22 +703,36 @@ def main():
                                          [ct], -1, 255, -1))
 
                 if z_da3 is not None:
-                    # Only ever used to make the FIRST measurement of a kind of
-                    # piece; once locked, these samples are ignored entirely.
+                    # Only ever used to make the FIRST measurement of this
+                    # brick; once locked, these samples are ignored entirely.
                     long_cm_raw = (long_px / f_size) * z_da3 * 100.0
                     short_cm_raw = (short_px / f_size) * z_da3 * 100.0
                 else:
                     long_cm_raw = short_cm_raw = None
-                slot = tracks.update(c["name"], u, v, z_da3,
-                                     long_cm_raw, short_cm_raw, angle, shape)
+
+                dets.append({"ct": ct, "x": x, "y": y, "cx": u, "cy": v,
+                             "long_px": long_px, "short_px": short_px,
+                             "z": z_da3, "long_cm": long_cm_raw,
+                             "short_cm": short_cm_raw,
+                             "angle": angle, "shape": shape})
+
+            # PASS 2 - one slot per piece, assigned nearest-first with each
+            # slot claimable once, then draw and report each piece separately.
+            for det, slot in zip(dets, tracks.update_frame(c["name"], dets)):
+                ct, x, y = det["ct"], det["x"], det["y"]
+                u, v, long_px = det["cx"], det["cy"], det["long_px"]
+                angle, z_da3 = det["angle"], det["z"]
 
                 # Feed the blueprint from PIXELS, before any of the depth/size
                 # gates below. The blueprint does its own scaling and knows
                 # nothing about centimetres, so making it wait for DA3 to load
                 # and a size to lock would just mean an empty Unreal scene for
                 # the first few seconds - or forever, on a machine with no GPU.
-                osc_dets.append((c["name"], cv2.contourArea(ct),
-                                 (u, v, angle or 0.0, long_px, short_px)))
+                # The slot's name (yellow1, yellow2, ...) is what keeps a given
+                # brick on the same Unreal cube frame after frame.
+                osc_dets.append((c["name"], slot["name"],
+                                 (u, v, slot["angle"] or 0.0,
+                                  long_px, det["short_px"])))
 
                 # While a NEW kind of piece is settling, draw it dim + show a
                 # countdown; only a CONFIRMED piece is reported and sent on.
@@ -597,7 +756,7 @@ def main():
                     z_used = (slot["long_cm"] / 100.0) * f_size / long_px
                     z_src = "sz"
                 if z_used is None:
-                    cv2.putText(frame, f"{c['name']}/{slot['shape']} z=?",
+                    cv2.putText(frame, f"{slot['name']}/{slot['shape']} z=?",
                                 (x, y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                                 c["draw"], 2)
                     continue
@@ -613,7 +772,7 @@ def main():
                     frame_tag = "cam"
                 ang_txt = f" {slot['angle']:.0f}deg" if slot["angle"] \
                     is not None else ""
-                l1 = (f"{c['name']}/{slot['shape']} "
+                l1 = (f"{slot['name']}/{slot['shape']} "
                       f"({X:+.2f},{Y:+.2f},{Zf:+.2f}){frame_tag}")
                 size_txt = f"{long_cm:.1f}x{short_cm:.1f}cm" \
                     if long_cm is not None else "size?"
@@ -633,12 +792,12 @@ def main():
                 if long_cm is not None and (biggest is None
                                             or long_cm > biggest[0]):
                     biggest = (long_cm, c["name"], slot["shape"])
-                report.append((c["name"], slot["shape"], X, Y, Zf,
+                report.append((slot["name"], slot["shape"], X, Y, Zf,
                                long_cm, short_cm, slot["angle"]))
                 if osc is not None and long_cm is not None:
                     a_out = 0.0 if slot["angle"] is None else slot["angle"]
                     # meters -> mm for Unreal; keep the /obj layout
-                    osc.send_message("/obj", [c["name"], X * 1000.0,
+                    osc.send_message("/obj", [slot["name"], X * 1000.0,
                                      Y * 1000.0, a_out, long_cm, short_cm,
                                      Zf * 1000.0])
                 cv2.putText(frame, l1, (x, y - 24), cv2.FONT_HERSHEY_SIMPLEX,
@@ -659,10 +818,11 @@ def main():
             dstat = "DEPTH off"
         frame_state = ("FLOOR" if (use_floor and floor.ok)
                        else "floor?" if use_floor else "CAM")
+        live = sum(len(l) for l in tracks.slots.values())
         cv2.putText(frame, f"{dstat}  frame:{frame_state}  intr:{intr_src}  "
                     f"z:{'size-locked' if size_depth else 'raw'}  "
-                    f"sizes:{len(book.book)}  scale:{depth.metric_scale:.3f}  "
-                    f"{fps:.0f}fps",
+                    f"pieces:{live}  sizes:{book.count()}  "
+                    f"scale:{depth.metric_scale:.3f}  {fps:.0f}fps",
                     (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         cv2.imshow(win, frame)
@@ -699,10 +859,10 @@ def main():
                       f"(total {depth.metric_scale:.4f})")
         elif key == ord('p'):
             if report:
-                print(" | ".join(
-                    f"{n}/{sh}: ({X:+.2f},{Y:+.2f},{Z:+.2f}) "
-                    f"{lo:.1f}x{shrt:.1f}cm ang={ang}"
-                    for (n, sh, X, Y, Z, lo, shrt, ang) in report))
+                print(f"[pieces] {len(report)} tracked")
+                for (n, sh, X, Y, Z, lo, shrt, ang) in sorted(report):
+                    print(f"  {n:10} {sh:10} ({X:+.2f},{Y:+.2f},{Z:+.2f}) "
+                          f"{lo:.1f}x{shrt:.1f}cm ang={ang}")
             else:
                 print("no pieces with depth yet")
 

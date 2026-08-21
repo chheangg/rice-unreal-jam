@@ -57,7 +57,6 @@ class DepthEstimator:
         self._frame_event = threading.Event()
         self._stop = threading.Event()
         self._worker = None
-        self.last_error = None
 
         self._load()
 
@@ -138,7 +137,6 @@ class DepthEstimator:
             self.available = True
             print("[depth] model ready.")
         except Exception as e:                       # missing pkg, OOM, no net, etc.
-            self.last_error = repr(e)
             self.available = False
             print(f"[depth] disabled — falling back to 2D only. Reason: {e}")
 
@@ -267,7 +265,6 @@ class DepthEstimator:
                     self._intr = intr
                     self._depth_src_shape = frame.shape[:2]
             except Exception as e:
-                self.last_error = repr(e)
                 print(f"[depth] inference error: {e}")
 
     def _infer(self, rgb):

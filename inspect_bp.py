@@ -12,7 +12,7 @@ graph = bel.find_event_graph(bp)
 
 # ── 1. All Python-visible attributes on the graph object ─────────
 attrs = [a for a in dir(graph) if not a.startswith("_")]
-unreal.log(f"\ndir(graph):\n  " + "\n  ".join(attrs))
+unreal.log("\ndir(graph):\n  " + "\n  ".join(attrs))
 
 # ── 2. list_events — do we get names or node objects? ────────────
 unreal.log("\n--- list_events ---")
@@ -39,7 +39,7 @@ try:
     schema = graph.get_schema()
     unreal.log(f"  schema class: {schema.get_class().get_name()}")
     schema_attrs = [a for a in dir(schema) if not a.startswith("_")]
-    unreal.log(f"  dir(schema):\n    " + "\n    ".join(schema_attrs))
+    unreal.log("  dir(schema):\n    " + "\n    ".join(schema_attrs))
 except Exception as e:
     unreal.log(f"  FAILED: {e}")
 

@@ -133,7 +133,7 @@ def preview(src):
                 print("  usable but not smooth; a direct hotspot link would help.")
             else:
                 print("  good enough for the tracker.")
-            print(f"\n  use this source in the tracker:")
+            print("\n  use this source in the tracker:")
             shown = src if isinstance(src, int) else f'"{src}"'
             print(f"      cap = cv2.VideoCapture({shown})")
 

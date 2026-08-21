@@ -14,6 +14,7 @@ MT03_RealTimeLayout/   Unreal Engine project (engine 5.8)
 detect.py              webcam block tracker -> sends OSC to Unreal
 lego_locator_xyz.py    current tracker: all colours, shape, size, XYZ
 unreal_bridge.py       turns detections into the /obj message BP_OSCreciver parses
+ue_multi_receiver.py   runs inside Unreal: spawns one actor per tracked piece
 send_test.py           fake tracker - replays the real OSC message, no camera
 camera_probe.py        checks what OpenCV can see (indices or a phone URL)
 inspect_bp.py          debug script, run inside Unreal's embedded Python
@@ -143,9 +144,87 @@ empty Unreal scene, and both live in the blueprint, not the tracker:
   those four names (yellows small->large, biggest red) and prints a one-time
   warning for any colour the blueprint has no cube for.
 
+#### Several pieces at once
+
+The tracker follows every piece the camera can see, of any colour, including
+several of the **same** colour, and gives each a stable name that follows that
+brick: `yellow1`, `yellow2`, `red1`, ... The name is what decides which Unreal
+cube a brick drives, so a given brick stays on a given cube instead of the
+whole scene reshuffling whenever two similar bricks swap size order.
+
+`BP_OSCreciver` itself can only ever show **four** pieces — it has four
+pre-placed cubes (three yellow, one red) and no spawn path — so when you drive
+the blueprint, the bridge leases those four cubes out and prints what it had to
+drop:
+
+```
+[bridge] red2: all 1 red cube(s) in the blueprint are already leased, so this
+         piece is tracked but not shown. The receiver needs to spawn per name
+         to go past 1.
+[bridge] 'blue' tracked but BP_OSCreciver has no cube for it
+[bridge] 6 tracked, 4 shown (2 over capacity)
+```
+
+Press `p` in the preview window for a numbered list of everything being
+tracked; the HUD shows a live `pieces:` count. To get past four pieces in
+Unreal, use the spawning receiver below instead of the blueprint.
+
+Sizes are per brick, not per colour: `sizes.json` holds a list of known sizes
+for each colour+shape and matches a piece to the nearest one, so two yellow
+rectangles of different sizes keep their own centimetres. Old single-size
+`sizes.json` files still load.
+
 `--osc-metric` sends the rich float message
 (`[name, x_mm, y_mm, angle, long_cm, short_cm, z_mm]`) instead. The current
 blueprint **cannot** read it - it's there for when the receiver is rebuilt.
+
+### 2d. Showing more than four pieces in Unreal (`ue_multi_receiver.py`)
+
+`BP_OSCreciver` is a fixed set of cubes, so the ceiling is four. This script
+replaces it for the multi-object case: it runs **inside Unreal's Python**,
+listens for the OSC stream itself, and spawns/moves/destroys **one actor per
+tracked piece** — any count, any colour. The blueprint is left untouched and
+still works if you prefer it.
+
+In the Unreal editor, open the Output Log, set the Cmd dropdown to **Python**,
+and run:
+
+```
+exec(open(r"D:\Projects\rice-unreal-jam\ue_multi_receiver.py").read())
+```
+
+Then start the tracker pointed at the receiver's port:
+
+```
+python lego_locator_xyz.py 0 --osc-metric --osc-port 7001
+```
+
+`stop_receiver()` stops it and cleans up its actors; re-running the `exec` line
+restarts it cleanly (it removes its own leftovers first). Actors are labelled
+`LegoTwin_<piece>`, e.g. `LegoTwin_yellow2`.
+
+Notable differences from the blueprint path:
+
+- **It runs without pressing Play.** It ticks off Slate, not BeginPlay, so the
+  twin updates in the editor viewport with the level stopped — the blueprint's
+  OSC server only exists during Play, which is most of why "nothing shows up"
+  was so easy to hit.
+- **It uses `--osc-metric`.** Real centimetres and a real metric position, so
+  size and layout are physically faithful rather than the blueprint's
+  pixels-÷-50. It also accepts the legacy int message, if that's what's
+  running.
+- **Port 7001, not 7000**, so it doesn't fight the blueprint's server for the
+  bind when the level *is* playing.
+- **Knobs at the top of the file:** `DEMO_SCALE` (life-size bricks are a few cm
+  and read tiny next to UE's 100 uu cube — 5–10 makes a better demo, and scales
+  positions with sizes so the layout stays faithful), `WORLD_ORIGIN`, `FLIP_Y`,
+  `DROP_AFTER_S`, and the per-colour `MATERIALS` map.
+
+Its OSC parsing and unit maths are covered by a run of the real tracker against
+the real datagrams (6 pieces → 6 distinct actors, correct sizes and
+materials). The `unreal` API calls themselves — spawn, destroy, set transform —
+have not been exercised in-engine yet, so expect to shake those out on first
+run.
 
 ### 3. No camera handy?
 
@@ -224,6 +303,9 @@ Unreal side, because that is where this usually fails:
    cube for - the bridge says so once per colour.
 6. **Firewall.** OSC is UDP. Loopback is normally fine; sending from another
    machine (`--osc-host`) needs UDP 7000 open on the Unreal box.
+7. **Only four pieces ever appear.** That's the blueprint's ceiling, not a
+   tracking bug — the bridge prints `N tracked, 4 shown`. Use
+   `ue_multi_receiver.py` (2d) for more.
 
 Do not "fix" this by sending floats or richer names until the blueprint is
 rebuilt to match - see 2c above for why those silently produce nothing.

@@ -176,8 +176,8 @@ def main():
             cnt = pieces[c["name"]]
             counts[c["name"]] = len(cnt)
             for ct in cnt:
-                x, y, w, h = cv2.boundingRect(ct)   # anchors the text label
-                (cx, cy), (rw, rh), _ = cv2.minAreaRect(ct)
+                x, y = cv2.boundingRect(ct)[:2]     # anchors the text label
+                _, (rw, rh), _ = cv2.minAreaRect(ct)
                 cv2.drawContours(frame, [ct], -1, c["draw"], 2)  # real outline
                 cv2.putText(frame, f"{c['name']}/{classify_shape(ct)} "
                             f"{int(rw)}x{int(rh)}", (x, y - 8),

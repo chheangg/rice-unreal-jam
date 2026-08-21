@@ -137,16 +137,39 @@ despite how it's sometimes referred to). Design notes:
 - Marker/tag color (or ArUco tag itself) must not collide with a tracked shape's own color.
 - Lighting has an outsized effect on stability — bring the flashlight.
 - Plain `minAreaRect` angle is 180°-ambiguous; ArUco avoids this entirely (true 0–360°).
-- Previous race condition risk: multiple OSC messages per frame can overlap in a long Blueprint graph. Consider per-ID/per-address messages if this reappears.
+- Previous race condition risk: multiple OSC messages per frame can overlap in a long Blueprint graph. Consider per-ID/per-address messages if this reappears. **This is now live** — with several pieces tracked, the tracker sends up to four `/obj` messages per frame instead of one, so if the receiver graph starts dropping updates, this is the first thing to suspect.
+- Nearest-neighbour tracking must assign one track per blob **per frame**, not per blob as it is measured. Matching blobs one at a time let two same-colour bricks 60 px apart claim the same track — and the first claim moved the track onto the first brick, so the second brick matched it too. Symptom: "it only tracks one object at a time", one position/size/depth shared between two pieces. Fixed 2026-08-20 by scoring all pairs against the previous frame's positions and assigning nearest-first with each track claimable once.
 
 ---
+
+## Multi-object (done 2026-08-20)
+
+- The tracker follows any number of pieces per colour, each with a stable name
+  (`yellow1`, `yellow2`, `red1`, ...) that follows that brick. Per-frame
+  one-to-one assignment; see the tracking note under "Carried-over knowledge".
+- `sizes.json` holds a **list** of sizes per colour+shape, matched by the
+  piece's own rough measurement, so two different-sized yellow rectangles keep
+  their own centimetres — and their own depth, since z is derived from the
+  locked size. Old single-size files still load.
+- Unreal shows them two ways: `BP_OSCreciver` (four cubes, hard ceiling, cubes
+  leased to pieces by stable name so nothing reshuffles) or
+  `ue_multi_receiver.py` (spawns per piece, no ceiling).
 
 ## Next actions
 
 1. [ ] Run the HSV tuner on all 5 Lego colors under demo lighting; record ranges.
 2. [ ] Decide: pre-made meshes vs. live-generated (→ recommend pre-made).
 3. [ ] Build combined color + ArUco detection script (position, rotation, ID, shape/color label).
-4. [ ] Build Unreal ID-based spawn/update receiver. Concretely, this is what
+4. [~] Build Unreal ID-based spawn/update receiver. **First cut landed as
+   `ue_multi_receiver.py`** — Unreal-side Python that reads the OSC stream over
+   a raw UDP socket and spawns/moves/destroys one actor per piece name, any
+   count, any colour, ticking off Slate so it works with the level stopped. Its
+   parsing and unit maths are tested; the `unreal` spawn/transform calls are
+   not yet exercised in-engine. Note this deliberately bypasses the blueprint
+   rather than editing it: `inspect_bp.py` established that UE's Python API
+   exposes graphs but not node wiring, so a graph rebuild is manual editor work.
+   A Blueprint version is still worth having for the demo (no Python console in
+   a packaged build). What that needs:
    unblocks the current tracker: spawn per unseen name instead of switching
    onto four fixed cubes, and read **floats** (`Get OSC Message Float at
    Index`) so the metric stream can be used as-is. `lego_locator_xyz.py
