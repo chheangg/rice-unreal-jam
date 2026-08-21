@@ -277,6 +277,44 @@ def resolve_intrinsics(depth, frame_w, frame_h, assumed_fov_deg):
     return (f, f, frame_w / 2.0, frame_h / 2.0), f"FOV{assumed_fov_deg:g}"
 
 
+def backproject(u, v, z, fx, fy, cx, cy):
+    """Pixel (u, v) at depth z (meters) -> camera-frame 3D point (meters).
+    (0,0,0) is the camera, +X right, +Y down, +Z forward."""
+    return np.array([(u - cx) * z / fx, (v - cy) * z / fy, z])
+
+
+def to_world_xy(P_cam, floor, use_floor):
+    """Camera-frame point -> (X, Y) in whichever frame is active (meters).
+    FLOOR frame when requested and the plane fit succeeded, else CAMERA
+    frame (X, Y straight from back-projection, no floor-relative height)."""
+    if use_floor and floor.ok:
+        X, Y, _ = floor.to_floor(P_cam)
+        return X, Y
+    return float(P_cam[0]), float(P_cam[1])
+
+
+def build_outline_mm(contour, cx, cy, fx, fy, z, floor, use_floor,
+                      max_points=16):
+    """Simplify a piece's contour (cv2.approxPolyDP) and back-project each
+    vertex into world space at a single shared depth z (the piece is rigid
+    and roughly flat, so one depth for the whole polygon is a fair
+    approximation). Returns a flat [x1_mm, y1_mm, x2_mm, y2_mm, ...] list -
+    winding order is preserved from the input contour (OpenCV contours from
+    findContours are clockwise in image space); no separate angle is needed
+    since each vertex already carries the piece's true rotation."""
+    eps = 0.02 * cv2.arcLength(contour, True)
+    poly = cv2.approxPolyDP(contour, eps, True).reshape(-1, 2)
+    if len(poly) > max_points:            # keep the OSC message bounded
+        idx = np.linspace(0, len(poly) - 1, max_points).astype(int)
+        poly = poly[idx]
+    pts_mm = []
+    for px, py in poly:
+        P_cam = backproject(px, py, z, fx, fy, cx, cy)
+        Xv, Yv = to_world_xy(P_cam, floor, use_floor)
+        pts_mm.extend([Xv * 1000.0, Yv * 1000.0])
+    return poly, pts_mm
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -410,8 +448,7 @@ def main():
                 cv2.drawContours(frame, [ct], -1, c["draw"], 2)   # real outline
                 if z is not None:
                     zs, w_cm, h_cm = slot["z"], slot["w_cm"], slot["h_cm"]
-                    P_cam = np.array([(u - cx) * zs / fx,
-                                      (v - cy) * zs / fy, zs])
+                    P_cam = backproject(u, v, zs, fx, fy, cx, cy)
                     if use_floor and floor.ok:
                         X, Y, Zf = floor.to_floor(P_cam)   # floor frame, height
                         frame_tag = "flr"
@@ -443,20 +480,8 @@ def main():
                         # out already in world/floor space, so they carry the
                         # piece's real rotation - Unreal just extrudes the
                         # polygon, no separate angle needed.
-                        eps = 0.02 * cv2.arcLength(ct, True)
-                        poly = cv2.approxPolyDP(ct, eps, True).reshape(-1, 2)
-                        if len(poly) > 16:        # keep the OSC message bounded
-                            idx = np.linspace(0, len(poly) - 1, 16).astype(int)
-                            poly = poly[idx]
-                        pts_mm = []
-                        for px, py in poly:
-                            Pv = np.array([(px - cx) * zs / fx,
-                                           (py - cy) * zs / fy, zs])
-                            if use_floor and floor.ok:
-                                Xv, Yv, _ = floor.to_floor(Pv)
-                            else:
-                                Xv, Yv = Pv[0], Pv[1]
-                            pts_mm.extend([Xv * 1000.0, Yv * 1000.0])
+                        poly, pts_mm = build_outline_mm(
+                            ct, cx, cy, fx, fy, zs, floor, use_floor)
                         osc.send_message("/outline",
                                          [c["name"], len(poly)] + pts_mm
                                          + [args.outline_height])
