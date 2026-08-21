@@ -25,6 +25,22 @@ Run:
     python send_test.py --churn 3        # add/drop a block every 3s
     python send_test.py --no-z           # old 6-element message
     python send_test.py --rate 5         # slow, easier to read in UE logs
+
+### --outline mode: testing ULegoOscSubsystem / the mesh-extrude receiver
+
+The modes above only ever send `/obj`, in pixel coordinates - useful for
+the OLD placeholder-cube receiver, but it never exercises `/outline` at
+all, which is the only address `ULegoOscSubsystem`
+(`MT03_RealTimeLayout/Source/.../LegoOscSubsystem.cpp`) listens to. Use
+`--outline` instead to fake `lego_locator_xyz.py`'s real wire format
+(metric mm/cm, world-space) and rotating polygons with concave shapes (an
+L, a plus/cross) as well as convex ones - so you can confirm the C++
+receiver builds and updates real extruded meshes with NO camera, NO Lego
+pieces, and NO lighting rig, just Unreal running and this script:
+
+    python send_test.py --outline                 # 4 fake pieces, rotating
+    python send_test.py --outline --ids 2 --rate 5 # slower, easier to watch
+
 Ctrl-C to stop.
 """
 
@@ -34,6 +50,61 @@ import random
 import time
 
 from pythonosc.udp_client import SimpleUDPClient
+
+# Local (unrotated, centered-at-origin) polygon templates for --outline mode,
+# in mm - deliberately including concave shapes (L, plus) alongside convex
+# ones (square, rectangle), since a convex-only test wouldn't catch a
+# receiver-side extrude that silently assumes convexity.
+OUTLINE_SHAPES = {
+    "square": (
+        [(-30, -30), (30, -30), (30, 30), (-30, 30)],
+        "square",
+    ),
+    "rectangle": (
+        [(-45, -20), (45, -20), (45, 20), (-45, 20)],
+        "rectangle",
+    ),
+    "L": (
+        [(-30, -30), (30, -30), (30, -10), (-10, -10), (-10, 30), (-30, 30)],
+        "?",   # classify_shape() has no "L" category - "?" is what the
+               # real pipeline would send for one too
+    ),
+    "plus": (
+        [(-10, -30), (10, -30), (10, -10), (30, -10), (30, 10), (10, 10),
+         (10, 30), (-10, 30), (-10, 10), (-30, 10), (-30, -10), (-10, -10)],
+        "cross",
+    ),
+}
+OUTLINE_HEIGHT_CM = 2.0   # matches lego_locator_xyz.py's --outline-height default
+
+
+class FakeOutlineBlock:
+    """One piece orbiting the floor-frame origin, spinning, with a fixed
+    local polygon - mirrors lego_locator_xyz.py's real /obj + /outline
+    output (mm/cm, world-space vertices already carrying true rotation)."""
+
+    def __init__(self, name, index, total, shape_name):
+        spread = (index + 0.5) / total
+        self.name = name
+        self.orbit_radius_mm = 150.0 + 40.0 * index
+        self.phase = 2 * math.pi * spread
+        self.speed = 0.3 + 0.08 * index         # rad/s, desynced per piece
+        self.spin_speed = 0.5 + 0.2 * index      # own rotation, separate from orbit
+        self.local_poly, self.shape_label = OUTLINE_SHAPES[shape_name]
+
+    def sample(self, t):
+        orbit_a = self.phase + self.speed * t
+        cx = self.orbit_radius_mm * math.cos(orbit_a)
+        cy = self.orbit_radius_mm * math.sin(orbit_a)
+        angle_deg = math.degrees(self.spin_speed * t) % 360.0
+        a = math.radians(angle_deg)
+        cos_a, sin_a = math.cos(a), math.sin(a)
+        world_poly = []
+        for (lx, ly) in self.local_poly:
+            wx = cx + (lx * cos_a - ly * sin_a)
+            wy = cy + (lx * sin_a + ly * cos_a)
+            world_poly.append((wx, wy))
+        return cx, cy, angle_deg, world_poly
 
 # Frame the fake blocks move inside - matches a default 640x480 webcam, so
 # the pixel coordinates land in the range Unreal is already scaled for
@@ -90,10 +161,45 @@ def main():
                    help="seconds between adding/dropping a block (0 = never, the default)")
     p.add_argument("--no-z", action="store_true",
                    help="send the 6-element message (detect.py) instead of 7 with z")
+    p.add_argument("--outline", action="store_true",
+                   help="test ULegoOscSubsystem/the mesh-extrude receiver instead: "
+                        "send lego_locator_xyz.py's real mm/cm /obj + /outline "
+                        "messages for rotating fake pieces (some concave), no "
+                        "camera or Unreal Blueprint work needed to see them")
     p.add_argument("--quiet", action="store_true", help="don't print every frame")
     args = p.parse_args()
 
     client = SimpleUDPClient(args.host, args.port)
+
+    if args.outline:
+        shape_names = list(OUTLINE_SHAPES)
+        names = make_names(args.ids)
+        blocks = [FakeOutlineBlock(n, i, args.ids, shape_names[i % len(shape_names)])
+                  for i, n in enumerate(names)]
+        print(f"faking {len(blocks)} outline pieces -> {args.host}:{args.port} "
+              f"/obj + /outline at {args.rate:g} Hz, Ctrl-C to stop")
+
+        start = time.time()
+        period = 1.0 / args.rate
+        try:
+            while True:
+                now = time.time()
+                t = now - start
+                for b in blocks:
+                    cx, cy, angle_deg, world_poly = b.sample(t)
+                    client.send_message("/obj", [b.name, cx, cy, angle_deg,
+                                                  60.0, 60.0, 0.0, b.shape_label])
+                    pts_mm = [v for xy in world_poly for v in xy]
+                    client.send_message("/outline", [b.name, len(world_poly)]
+                                         + pts_mm + [OUTLINE_HEIGHT_CM])
+                    if not args.quiet:
+                        print(f"{b.name}/{b.shape_label} center=({cx:.0f},{cy:.0f})mm "
+                              f"angle={angle_deg:.0f} n_points={len(world_poly)}")
+                time.sleep(max(0.0, period - (time.time() - now)))
+        except KeyboardInterrupt:
+            print("\nstopped")
+        return
+
     blocks = [FakeBlock(n, i, args.ids) for i, n in enumerate(make_names(args.ids))]
     active = list(blocks)          # currently reporting
     benched = []                   # gone quiet, available to come back
