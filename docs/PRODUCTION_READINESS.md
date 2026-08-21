@@ -278,6 +278,43 @@ including the same red-hue-wrap edge case already covered for
 `lego_locator.py`). Behavior when actually run as a script
 (`python detect.py`) is unchanged — this was a pure refactor.
 
+## 11. `side_height.py` / `platform_height.py` math — audited, no bugs found
+
+These two are the unused-by-the-live-pipeline calibration/height modules
+flagged in #6 — worth checking independently since they contain real
+geometry (similar-triangles depth-from-known-size, ray/plane intersection,
+camera↔world point transforms via `solvePnP`'s rvec/tvec) that had never
+been exercised by a test. Added `tests/test_side_height.py` (8 tests) and
+`tests/test_platform_height.py` (11 tests), all synthetic/no camera:
+
+- `side_height.py`: the depth-from-known-width formula
+  (`depth_mm = fx * real_width / pixel_width`) checked against hand-derived
+  values, inverse scaling with apparent width, simple-mode fallback
+  formula, unknown-color/degenerate-width → `None`. The camera↔world
+  rotation inversion (`p_world = R⁻¹ @ (p_cam - t)`) is tested with
+  `R = identity` specifically to avoid asserting anything about the real
+  calibration's Z-axis sign convention, which depends on chessboard corner
+  ordering at calibration time and isn't independently re-derivable from a
+  synthetic test — `calibrate_table_pose.py`'s own printed sanity check
+  (camera height vs. a tape measure) is the right place to verify that,
+  not a unit test.
+- `platform_height.py`: `_classify_corners()`'s quadrant sorting (axis-
+  aligned, order-independent, rotated, degenerate-input → `None`);
+  `ground_xy_mm()`'s ray/plane intersection against hand-derived expected
+  values (principal-point ray hits directly below the camera; an off-
+  center pixel's lateral offset scales exactly with depth; parallel-ray
+  and behind-the-ray degenerate cases both return `None` instead of
+  garbage); `camera_point_to_world()` round-trips the forward
+  `p_cam = R @ p_world + t` transform exactly, for a real (non-identity)
+  rotation; `solve_marker_camera_point()` recovers a known synthetic
+  ArUco pose's translation via `cv2.projectPoints` → `solvePnP` round trip.
+
+**Result: no bugs found in either file.** All 19 tests pass — the math in
+both modules is correct as written. Recorded here because "audited and
+found clean" is itself useful information for whoever eventually wires
+these into a live pipeline (see #6's still-open question of whether that
+should happen).
+
 ## Not investigated (would need a live camera or Unreal Editor — out of
 scope for this session per its hard constraints)
 
