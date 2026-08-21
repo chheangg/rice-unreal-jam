@@ -3,6 +3,13 @@
 	"EngineAssociation": "5.8",
 	"Category": "",
 	"Description": "",
+	"Modules": [
+		{
+			"Name": "MT03_RealTimeLayout",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
 	"Plugins": [
 		{
 			"Name": "ModelingToolsEditorMode",
