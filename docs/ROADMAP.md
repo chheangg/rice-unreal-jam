@@ -158,3 +158,8 @@ tracked in `tasks/2026-08-21-unreal-outline-extrude.md`.
 4. [ ] Build Unreal ID-based spawn/update receiver.
 5. [ ] Add one "wow" feature only.
 6. [ ] Harden + rehearse.
+7. [ ] See `docs/PRODUCTION_READINESS.md` for concrete gaps found reading
+   the current `lego_locator_xyz.py`/`depth_estimator.py` pipeline (no
+   camera reconnect, no config persistence, same-colour piece identity
+   swap under crossing, unused calibration tooling) — worth a pass before
+   any unattended multi-hour run.
