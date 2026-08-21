@@ -108,6 +108,27 @@ despite how it's sometimes referred to). Design notes:
 - Wants a CUDA GPU for interactive rates; on the CPU it will crawl (consider
   `DA3-SMALL` for speed at the cost of metric accuracy).
 
+## Real outline instead of a placeholder block (new — 2026-08-21)
+
+Decision, resolving the "Option 1 vs Option 2" mesh question above in a
+cheaper direction than either: don't do a full 3D scan/import, and don't
+live-build a full 3D mesh — instead **flat-extrude the real detected 2D
+outline** by a fixed height. `lego_locator_xyz.py --osc` now sends this as a
+second message per confirmed piece:
+
+```
+/outline -> [name, n_points, x1_mm, y1_mm, ..., xn_mm, yn_mm, height_cm]
+```
+
+Vertices are the piece's simplified contour (`cv2.approxPolyDP`), already
+back-projected into the same floor-frame world space as `/obj`'s x/y — so
+they already carry the piece's true rotation, no separate angle math needed
+on the Unreal side. `height_cm` is a **fixed** constant (`--outline-height`,
+default 2.0cm) — not measured, just enough thickness to read as a solid.
+Tradeoff: correct top-down footprint, uniformly flat on top (no real
+knob/step detail). Unreal-side build (Geometry Script polygon extrude) is
+tracked in `tasks/2026-08-21-unreal-outline-extrude.md`.
+
 ## Engine / stack
 
 - **Unreal Engine 5.8** (MechTwin03 project baseline; OSC receiver Blueprint built for this version)
