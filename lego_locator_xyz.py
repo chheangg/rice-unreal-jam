@@ -100,7 +100,15 @@ def make_aruco():
 
 
 def detect_markers(gray, state):
-    """Return [(center_xy, angle_deg, corners)] for every tag found."""
+    """Return [(center_xy, angle_deg, corners, marker_id)] for every tag
+    found. marker_id is the tag's actual encoded ArUco ID (0-49 for
+    DICT_4X4_50) - a stable per-physical-tag identity, distinct from
+    position. Previously this function detected ids but discarded them
+    (zipped corners against nothing), so two tagged pieces of the same
+    colour were indistinguishable to anything downstream except by pixel
+    position - see Tracks.update()'s tag_id parameter, which uses this to
+    avoid the same-colour identity-swap failure mode documented in
+    docs/PRODUCTION_READINESS.md #5."""
     mode, obj = state
     if mode == "new":
         corners, ids, _ = obj.detectMarkers(gray)
@@ -110,12 +118,12 @@ def detect_markers(gray, state):
     out = []
     if ids is None:
         return out
-    for c in corners:
+    for c, mid in zip(corners, ids.ravel()):
         pts = c.reshape(4, 2)                 # TL, TR, BR, BL
         center = pts.mean(axis=0)
         tl, tr = pts[0], pts[1]
         angle = math.degrees(math.atan2(tr[1] - tl[1], tr[0] - tl[0])) % 360.0
-        out.append((center, angle, pts))
+        out.append((center, angle, pts, int(mid)))
     return out
 
 
@@ -204,6 +212,20 @@ class Tracks:
     still comes through, just settled over a few frames rather than flickering.
     Pixel centroid is NOT smoothed (position already looks good, and we want it
     responsive); only z and cm are.
+
+    IDENTITY: when a detection carries an ArUco tag_id, it's a hard identity
+    key - matching first looks for an existing slot already carrying that
+    exact tag_id (matched regardless of distance, since the tag ID is
+    unambiguous even if the piece moved fast). Failing that, nearest-centroid
+    matching runs only over slots that are untagged or share this tag_id -
+    a slot already locked to a DIFFERENT tag_id is excluded, so a tagged
+    piece can never steal another tagged piece's slot just by passing near
+    it. This is what fixes the same-colour identity-swap failure mode
+    documented in docs/PRODUCTION_READINESS.md #5 - for TAGGED pieces only.
+    An untagged detection (no ArUco tag, or tag not currently visible) still
+    falls back to plain nearest-centroid over every slot of that colour,
+    tagged or not - the original failure mode is unchanged for untagged
+    pieces, since position is genuinely the only signal available for them.
     """
     def __init__(self, alpha=0.25, match_dist=90, max_miss=15,
                  settle_seconds=3.0, size_alpha=0.12):
@@ -215,23 +237,52 @@ class Tracks:
                                                 # long before it's "confirmed"
         self.slots = {}                         # colour name -> list of slots
 
-    def update(self, color, cx, cy, z, w_cm, h_cm, angle=None, shape=None):
+    def update(self, color, cx, cy, z, w_cm, h_cm, angle=None, shape=None,
+               tag_id=None):
         now = time.time()
         lst = self.slots.setdefault(color, [])
+
         best, best_d = None, 1e9
-        for s in lst:
-            d = math.hypot(s["cx"] - cx, s["cy"] - cy)
-            if d < best_d:
-                best, best_d = s, d
-        if best is None or best_d > self.match_dist:
+        if tag_id is not None:
+            # Hard identity match first: a slot already carrying this exact
+            # tag wins outright, no distance limit.
+            for s in lst:
+                if s.get("tag_id") == tag_id:
+                    best = s
+                    break
+            if best is None:
+                # No slot owns this tag yet - nearest-centroid, but ONLY
+                # among slots that aren't already a DIFFERENT tag's slot.
+                for s in lst:
+                    if s.get("tag_id") is not None and s["tag_id"] != tag_id:
+                        continue
+                    d = math.hypot(s["cx"] - cx, s["cy"] - cy)
+                    if d < best_d:
+                        best, best_d = s, d
+                if best is not None and best_d > self.match_dist:
+                    best = None
+        else:
+            # No tag on this detection: original behaviour, nearest-centroid
+            # over every slot regardless of tag ownership (position is the
+            # only signal available).
+            for s in lst:
+                d = math.hypot(s["cx"] - cx, s["cy"] - cy)
+                if d < best_d:
+                    best, best_d = s, d
+            if best is not None and best_d > self.match_dist:
+                best = None
+
+        if best is None:
             # brand-new piece: start its settle timer, not confirmed yet
             best = {"cx": cx, "cy": cy, "z": z, "w_cm": w_cm, "h_cm": h_cm,
                     "w_samps": deque(maxlen=90), "h_samps": deque(maxlen=90),
                     "size_locked": False,
                     "angle": angle, "_phasor": None, "shapes": deque(maxlen=9),
-                    "shape": shape, "miss": 0,
+                    "shape": shape, "miss": 0, "tag_id": tag_id,
                     "first_seen": now, "confirmed": False}
             lst.append(best)
+        elif tag_id is not None and best.get("tag_id") is None:
+            best["tag_id"] = tag_id           # adopt: first tag sighting on this slot
         best["cx"], best["cy"], best["miss"] = cx, cy, 0
         # confirm once it has been seen continuously for settle_seconds. A piece
         # that leaves for > max_miss frames is dropped by age(), so putting a
@@ -412,9 +463,11 @@ def main():
         min_area = cv2.getTrackbarPos("Min area/100", win) * 100
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        markers = detect_markers(gray, aruco)     # [(center, angle, corners)]
-        for center, angle, pts in markers:
+        markers = detect_markers(gray, aruco)  # [(center, angle, corners, id)]
+        for center, angle, pts, mid in markers:
             cv2.polylines(frame, [pts.astype(int)], True, (255, 0, 255), 2)
+            cv2.putText(frame, f"#{mid}", (int(center[0]), int(center[1])),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
         # Refit the floor plane from the current depth map (cheap, subsampled).
         dm = depth.latest_depth_map()
@@ -431,12 +484,17 @@ def main():
                 (u, v), (rw, rh), _ = cv2.minAreaRect(ct)
 
                 shape = classify_shape(ct)
-                # A tag whose centre falls inside this blob gives its rotation.
+                # A tag whose centre falls inside this blob gives its
+                # rotation AND its identity (tag_id) - tag_id is a hard
+                # identity key Tracks.update() prefers over nearest-centroid
+                # matching, so two same-colour pieces crossing paths don't
+                # swap slots (docs/PRODUCTION_READINESS.md #5).
                 angle = None
-                for center, ang, _pts in markers:
+                tag_id = None
+                for center, ang, _pts, mid in markers:
                     if cv2.pointPolygonTest(ct, (float(center[0]),
                                                  float(center[1])), False) >= 0:
-                        angle = ang
+                        angle, tag_id = ang, mid
                         break
 
                 # Depth sampled ONLY inside the piece (eroded a few px so the
@@ -454,10 +512,10 @@ def main():
                     w_cm_raw = (rw / fx) * z * 100.0
                     h_cm_raw = (rh / fy) * z * 100.0
                     slot = tracks.update(c["name"], u, v, z, w_cm_raw, h_cm_raw,
-                                         angle, shape)
+                                         angle, shape, tag_id)
                 else:
                     slot = tracks.update(c["name"], u, v, None, None, None,
-                                         angle, shape)
+                                         angle, shape, tag_id)
 
                 # While a new piece is settling, draw it dim + show a countdown;
                 # only a CONFIRMED piece (held 3s) is reported and sent to Unreal.

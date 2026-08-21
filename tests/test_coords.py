@@ -274,6 +274,37 @@ def test_build_outline_mm_uses_floor_frame_when_available():
 
 
 # ---------------------------------------------------------------------------
+# detect_markers: ArUco tag IDs must be correctly paired with their corners
+# (regression test - detect_markers used to detect ids but discard them,
+# zipping `corners` alone in the loop, so every tag's encoded ID was lost).
+# ---------------------------------------------------------------------------
+
+def test_detect_markers_pairs_correct_id_with_each_tag():
+    aruco_dict = cv2.aruco.getPredefinedDictionary(getattr(cv2.aruco, loc.ARUCO_DICT))
+    img = np.full((400, 400), 255, dtype=np.uint8)
+    tag0 = cv2.aruco.generateImageMarker(aruco_dict, 0, 80)
+    tag5 = cv2.aruco.generateImageMarker(aruco_dict, 5, 80)
+    img[40:120, 40:120] = tag0
+    img[250:330, 250:330] = tag5
+
+    state = loc.make_aruco()
+    markers = loc.detect_markers(img, state)
+    assert len(markers) == 2
+
+    by_id = {mid: center for center, angle, pts, mid in markers}
+    assert set(by_id) == {0, 5}
+    # id 0 was placed near (40,40)-(120,120), id 5 near (250,250)-(330,330)
+    assert by_id[0][0] < 200 and by_id[0][1] < 200
+    assert by_id[5][0] > 200 and by_id[5][1] > 200
+
+
+def test_detect_markers_no_tags_returns_empty_list():
+    blank = np.full((200, 200), 255, dtype=np.uint8)
+    state = loc.make_aruco()
+    assert loc.detect_markers(blank, state) == []
+
+
+# ---------------------------------------------------------------------------
 # Tracks: settle gating, per-colour nearest-centroid matching, size locking,
 # circular angle averaging across the 0/360 wrap
 # ---------------------------------------------------------------------------
@@ -349,6 +380,67 @@ def test_tracks_crossing_same_color_pieces_can_swap_identity():
     slot = t.update("red", 5, 0, 1.0, 9.0, 9.0)
     assert len(t.slots["red"]) == 2
     assert list(slot["w_samps"]) == [4.0, 9.0]   # A's history, contaminated by B
+
+
+def test_tracks_tagged_pieces_do_not_swap_identity_when_crossing():
+    """The fix for the identity-swap failure mode: when both pieces carry
+    distinct ArUco tag_ids, a piece crossing near another's slot must NOT
+    be absorbed into it - tag_id is a hard identity key."""
+    t = loc.Tracks(settle_seconds=0.0, match_dist=90)
+    t.update("red", 0, 0, 1.0, 4.0, 4.0, tag_id=1)     # piece A, tag 1
+    t.update("red", 300, 0, 1.0, 9.0, 9.0, tag_id=2)   # piece B, tag 2
+    assert len(t.slots["red"]) == 2
+
+    # B moves to where A's slot is, well within match_dist - but B still
+    # carries tag_id=2, so it must NOT be matched to A's tag_id=1 slot.
+    slot_b = t.update("red", 5, 0, 1.0, 9.0, 9.0, tag_id=2)
+    assert len(t.slots["red"]) == 2          # no new slot, no swap either
+    assert slot_b["tag_id"] == 2
+    assert slot_b["w_samps"][-1] == 9.0      # B's own history, uncontaminated
+
+    slot_a = t.update("red", 0, 0, 1.0, 4.0, 4.0, tag_id=1)
+    assert slot_a is not slot_b
+    assert slot_a["w_samps"][-1] == 4.0      # A's history, also uncontaminated
+
+
+def test_tracks_tag_id_matches_regardless_of_distance():
+    """A tagged piece that jumps far in one frame (fast motion / a dropped
+    frame) must still be recognized as the SAME piece by tag_id, not treated
+    as a new one just because it moved further than match_dist."""
+    t = loc.Tracks(settle_seconds=0.0, match_dist=90)
+    t.update("blue", 10, 10, 1.0, 5.0, 5.0, tag_id=7)
+    assert len(t.slots["blue"]) == 1
+    slot = t.update("blue", 500, 500, 1.0, 5.0, 5.0, tag_id=7)  # big jump
+    assert len(t.slots["blue"]) == 1         # still the same slot
+    assert slot["cx"] == 500 and slot["cy"] == 500
+
+
+def test_tracks_untagged_detection_still_uses_nearest_centroid_fallback():
+    """A slot that adopted a tag_id can still be updated by an UNTAGGED
+    detection (e.g. the tag becomes briefly occluded) via plain
+    nearest-centroid, preserving continuity instead of orphaning the slot."""
+    t = loc.Tracks(settle_seconds=0.0, match_dist=90)
+    t.update("green", 10, 10, 1.0, 5.0, 5.0, tag_id=3)
+    assert t.slots["green"][0]["tag_id"] == 3
+    slot = t.update("green", 12, 11, 1.0, 5.0, 5.0, tag_id=None)  # tag lost
+    assert len(t.slots["green"]) == 1
+    assert slot["tag_id"] == 3               # identity remembered
+
+
+def test_tracks_second_tag_of_different_id_does_not_steal_untagged_slot_owner():
+    """A slot with NO tag yet is fair game for a new tag to adopt (first
+    sighting) - but once adopted, a DIFFERENT tag_id must not steal it even
+    if nearer than the tag's own existing slot would be."""
+    t = loc.Tracks(settle_seconds=0.0, match_dist=90)
+    t.update("yellow", 100, 100, None, None, None)   # untagged, no tag_id yet
+    slot = t.update("yellow", 100, 100, None, None, None,
+                    tag_id=9)                # same spot, now tagged
+    assert slot["tag_id"] == 9
+    assert len(t.slots["yellow"]) == 1
+    # a different tag arriving at the exact same spot must NOT steal it
+    other = t.update("yellow", 100, 100, None, None, None, tag_id=42)
+    assert other is not slot
+    assert len(t.slots["yellow"]) == 2
 
 
 def test_tracks_angle_ema_wraps_across_0_360_boundary():

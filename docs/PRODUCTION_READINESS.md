@@ -85,46 +85,51 @@ original hardcoded defaults rather than crashing — see
 `tests/test_locator_config.py` (9 tests: round-trip, missing/corrupt/
 non-dict file, partial file, atomic save, unknown-key handling).
 
-## 5. Multi-piece disambiguation: same-colour pieces can swap identity
+## 5. Multi-piece disambiguation: same-colour pieces can swap identity — PARTIALLY FIXED
 
-`Tracks.update()` (`lego_locator_xyz.py:207`) matches an incoming
-detection to the nearest existing slot **of the same colour**, within
-`match_dist` (90px) pixels, with no other identity signal (no ArUco ID
-feeding into the match — the tag's `angle` is attached to whichever slot
-wins the nearest-centroid match, not the other way around):
+Original finding: `Tracks.update()` matched an incoming detection to the
+nearest existing slot **of the same colour** within `match_dist` (90px),
+with no other identity signal — and worse, a separate bug meant the ArUco
+tag's own encoded ID was never even available to use: `detect_markers()`
+called `cv2.aruco.detectMarkers()`, which returns `(corners, ids, rejected)`,
+but zipped `corners` alone in its output loop — `ids` was checked for
+`None` and then silently discarded. Confirmed two same-colour pieces
+crossing paths would swap slot identity
+(`tests/test_coords.py::test_tracks_crossing_same_color_pieces_can_swap_identity`).
 
-```python
-for s in lst:
-    d = math.hypot(s["cx"] - cx, s["cy"] - cy)
-    if d < best_d:
-        best, best_d = s, d
-```
+**Status: fixed for TAGGED pieces this session.**
+1. `detect_markers()` now zips `corners` against `ids.ravel()` and returns
+   each tag's real `marker_id` alongside its center/angle/corners
+   (`tests/test_coords.py::test_detect_markers_pairs_correct_id_with_each_tag`
+   is a regression test for the original silent-discard bug).
+2. `Tracks.update()` takes a `tag_id` parameter. When present, it's a HARD
+   identity key: an existing slot already carrying that exact `tag_id` wins
+   the match outright (no distance limit — a tagged piece is recognized
+   even after a big frame-to-frame jump), and when no slot owns that tag
+   yet, nearest-centroid matching runs only over slots that are untagged or
+   share the tag (a slot already locked to a *different* tag is excluded,
+   so it can never be stolen). An untagged detection (no tag on the piece,
+   or the tag briefly not visible) still falls back to plain
+   nearest-centroid over every slot — unchanged, since position is the only
+   signal available for it.
+3. `main()` now looks up `tag_id` alongside `angle` when a marker's centre
+   falls inside a piece's contour, and passes it through to
+   `tracks.update()`.
 
-**Actual failure mode** (confirmed with a synthetic test,
-`tests/test_coords.py::test_tracks_crossing_same_color_pieces_can_swap_identity`):
-two pieces of the same colour, tracked in separate slots, that pass within
-90px of each other's position on a frame will have their slots'
-identities swap — slot A silently starts tracking piece B's position/size
-history, and vice versa doesn't even need to happen for the effect to
-show: as demonstrated, B moving *near* A's slot (not even to the exact same
-point) is enough to be matched to A's slot instead of staying attached to
-its own. Since size is locked at confirmation
-(`best["size_locked"]`), an already-confirmed piece's reported *size*
-won't visibly change after a swap (it's frozen), but its **position**
-and **angle** on-screen would suddenly reflect the other piece's, and any
-still-unlocked (`size_locked == False`) size sampling gets contaminated
-with a sample from a physically different piece (also confirmed in the
-same test).
+Verified with 4 new tests
+(`test_tracks_tagged_pieces_do_not_swap_identity_when_crossing`,
+`test_tracks_tag_id_matches_regardless_of_distance`,
+`test_tracks_untagged_detection_still_uses_nearest_centroid_fallback`,
+`test_tracks_second_tag_of_different_id_does_not_steal_untagged_slot_owner`).
 
-**Gap:** the tracker has no per-piece appearance/ID signal beyond position
-and colour. Options, roughly in order of effort: (a) lower `match_dist` at
-the cost of losing fast-moving pieces between frames, (b) feed the ArUco
-tag ID (when present) into matching as a hard identity key instead of a
-side-channel angle, ahead of pure nearest-centroid, (c) a proper tracker
-with velocity prediction (Kalman-ish) so "nearest" accounts for expected
-motion, not just last-known position. (b) is the cheapest given ArUco is
-already the recommended ID mechanism (see `shape_recognizer.py`'s
-recommendation) — worth doing before (c).
+**Still a real gap: UNTAGGED same-colour pieces.** The fix only helps
+pieces that actually carry a visible ArUco tag. Two same-colour pieces
+with no tag (or a currently-occluded tag) crossing paths will still swap,
+by design — position is genuinely the only signal for them. Remaining
+options if that matters: (a) require every tracked piece to carry a tag
+(a process/demo-prep constraint, not a code fix), (b) a proper tracker with
+velocity prediction (Kalman-ish) so "nearest" accounts for expected motion
+instead of just last-known position, for the untagged case specifically.
 
 ## 6. Calibration tooling exists but the active tracker doesn't use it
 
