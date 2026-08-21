@@ -183,7 +183,52 @@ per detection could see meaningfully more slots than real pieces on the
 table. Not a leak, just wasted work and slightly stale HUD/`age()` cost —
 worth a note, not urgent.
 
-## 8. `DepthEstimator` thread safety — reviewed, looks correct
+## 8. `FloorFrame`'s in-plane axes could flip 180° mid-run — FIXED
+
+`FloorFrame.fit()` runs every single frame (not just once) — the camera and
+floor are physically fixed, but depth noise still perturbs the RANSAC-fitted
+normal slightly frame to frame. The in-plane basis (u/v — what `/obj` and
+`/outline` actually report as X/Y) used to be picked from a hardcoded
+threshold on the normal's alignment with a fixed world axis:
+
+```python
+seed = np.array([1.0, 0.0, 0.0])
+if abs(nrm.dot(seed)) > 0.9:
+    seed = np.array([0.0, 1.0, 0.0])
+```
+
+**Confirmed bug:** two normal values on either side of that `0.9` threshold
+produce a basis whose u/v axes point in **opposite (180°) directions** —
+verified directly:
+
+```
+dot=0.899: u=[ 0.  0. -1.]
+dot=0.901: u=[0. 0. 1.]
+```
+
+Since `fit()` reruns every frame from noisy real depth data, a floor
+normal that happens to sit near that threshold would flip the ENTIRE
+floor-frame coordinate system every time noise nudged it across — meaning
+every confirmed piece's `/obj` X/Y and every `/outline` vertex would
+suddenly negate/mirror, for a piece that never moved. This would show up
+in Unreal as pieces randomly teleporting/mirroring mid-demo with no
+apparent trigger.
+
+**Fixed this session:** `FloorFrame._basis_for_normal()` now reuses the
+*previous* fit's u axis (projected onto the new plane) as this fit's seed,
+so a small normal change only rotates u/v slightly — never flips them. The
+fixed-seed method is now only a first-fit bootstrap (no previous `self.u`
+yet). See `tests/test_coords.py::test_floorframe_basis_does_not_flip_across_the_old_seed_threshold`
+(reproduces the exact 0.899/0.901 case above and confirms `dot(u1, u2) >
+0.9` after the fix) and
+`tests/test_coords.py::test_floorframe_basis_first_fit_has_no_previous_state_to_flip`.
+Also documented for whoever builds the Unreal side in
+`tasks/2026-08-21-unreal-outline-extrude.md`: the floor frame's absolute
+orientation is still arbitrary (not tied to any real-world compass
+direction, and can differ between separate tracker runs) — only the
+frame-to-frame flip within a single run was the bug.
+
+## 9. `DepthEstimator` thread safety — reviewed, looks correct
 
 Checked specifically because the task asked for it: `_depth`, `_intr`,
 `_depth_src_shape` are always read/written under `_depth_lock`

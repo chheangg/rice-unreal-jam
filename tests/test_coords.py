@@ -164,6 +164,42 @@ def test_floorframe_height_positive_for_point_closer_than_plane():
     assert h1 == pytest.approx(bump_height_m, abs=1e-3)
 
 
+def test_floorframe_basis_does_not_flip_across_the_old_seed_threshold():
+    """Regression test: _basis_for_normal used to pick its seed purely from
+    abs(nrm.dot([1,0,0])) > 0.9, which flips u/v by 180deg for two nrm
+    values straddling that threshold - meaning every /obj X/Y and every
+    /outline vertex would visibly jump each time the fitted floor normal
+    (refit every frame from noisy depth) happened to cross it, even for a
+    perfectly stationary camera and floor. Fixed by reusing the previous
+    fit's u axis (projected onto the new plane) for continuity."""
+    floor = loc.FloorFrame()
+    x1, x2 = 0.899, 0.901                 # straddle the old 0.9 threshold
+    n1 = np.array([x1, math.sqrt(1 - x1 * x1), 0.0])
+    n2 = np.array([x2, math.sqrt(1 - x2 * x2), 0.0])
+
+    u1, v1 = floor._basis_for_normal(n1)
+    floor.u, floor.v, floor.n = u1, v1, n1   # simulate this becoming the fit
+    u2, v2 = floor._basis_for_normal(n2)
+
+    # continuous basis: consecutive u's must stay closely aligned, not flip
+    assert np.dot(u1, u2) > 0.9
+    assert np.dot(v1, v2) > 0.9
+
+
+def test_floorframe_basis_first_fit_has_no_previous_state_to_flip():
+    """With no prior self.u (first fit ever), _basis_for_normal falls back
+    to the fixed-seed method - must not crash, and must return an
+    orthonormal basis."""
+    floor = loc.FloorFrame()
+    assert floor.u is None
+    nrm = np.array([0.0, 0.0, -1.0])
+    uax, vax = floor._basis_for_normal(nrm)
+    assert np.linalg.norm(uax) == pytest.approx(1.0)
+    assert np.linalg.norm(vax) == pytest.approx(1.0)
+    assert np.dot(uax, vax) == pytest.approx(0.0, abs=1e-6)
+    assert np.dot(uax, nrm) == pytest.approx(0.0, abs=1e-6)
+
+
 def test_floorframe_rejects_insufficient_or_degenerate_data():
     floor = loc.FloorFrame()
     # too few valid samples

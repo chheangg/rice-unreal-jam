@@ -188,13 +188,36 @@ class FloorFrame:
         # normal should point toward the camera (origin) so height is +ve up
         if nrm.dot(-p0) < 0:
             nrm = -nrm
-        # in-plane basis
+        uax, vax = self._basis_for_normal(nrm)
+        self.n, self.p0, self.u, self.v, self.ok = nrm, p0, uax, vax, True
+
+    def _basis_for_normal(self, nrm):
+        """In-plane basis (uax, vax) for unit normal `nrm`. `fit()` runs
+        every frame (the camera/floor are assumed fixed, but depth noise
+        still perturbs the recovered normal slightly frame to frame), so
+        this basis must stay CONTINUOUS across calls - otherwise every
+        /obj X/Y and every /outline vertex jumps whenever the fitted normal
+        happens to cross a hardcoded axis-alignment threshold. (Confirmed:
+        picking the seed purely from `abs(nrm.dot(seed)) > 0.9` flips u/v by
+        180 degrees for two nrm values on either side of that threshold -
+        see tests/test_coords.py::test_floorframe_basis_does_not_flip_...)
+        Fix: reuse the PREVIOUS fit's u axis, projected onto the new plane,
+        as this fit's u - a small normal change only rotates u/v slightly,
+        never flips them. Only the very first fit (no previous self.u yet)
+        falls back to a fixed world-axis seed."""
+        if self.u is not None:
+            proj = self.u - nrm * nrm.dot(self.u)
+            proj_len = np.linalg.norm(proj)
+            if proj_len > 1e-6:            # not degenerate (normal didn't
+                uax = proj / proj_len       # rotate ~90deg since last fit)
+                vax = np.cross(nrm, uax)
+                return uax, vax
         seed = np.array([1.0, 0.0, 0.0])
         if abs(nrm.dot(seed)) > 0.9:
             seed = np.array([0.0, 1.0, 0.0])
         uax = np.cross(nrm, seed); uax /= np.linalg.norm(uax)
         vax = np.cross(nrm, uax)
-        self.n, self.p0, self.u, self.v, self.ok = nrm, p0, uax, vax, True
+        return uax, vax
 
     def to_floor(self, P_cam):
         """Camera 3D point -> (X_floor, Y_floor, height) in meters."""
