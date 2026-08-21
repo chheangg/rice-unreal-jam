@@ -409,3 +409,75 @@ def test_classify_shape_frame_edge_contour_still_classifies():
         .reshape(-1, 1, 2)
     sq_edge = sq_center  # already anchored at the origin/edge
     assert classify_shape(sq_edge) == classify_shape(sq_center) == "square"
+
+
+def test_classify_shape_very_large_contour():
+    # A piece filling most of a 4K frame - must not overflow/behave
+    # differently purely due to scale (area/perimeter math is scale-free
+    # for aspect/circularity/solidity, but worth pinning down explicitly).
+    huge = np.array([[0, 0], [0, 3000], [3000, 3000], [3000, 0]],
+                    dtype=np.int32).reshape(-1, 1, 2)
+    assert classify_shape(huge) == "square"
+
+
+def test_classify_shape_thin_sliver_degenerates_gracefully():
+    """A near-zero-width contour (e.g. a color mask artifact/shadow edge)
+    must not crash approxPolyDP or divide-by-zero in the aspect check."""
+    sliver = np.array([[0, 0], [0, 1], [100, 1], [100, 0]], dtype=np.int32) \
+        .reshape(-1, 1, 2)
+    result = classify_shape(sliver)
+    assert result in ("rectangle", "square", "?")
+
+
+# ---------------------------------------------------------------------------
+# FloorFrame fallback path: floor.ok == False must not be silently used as
+# if it were a valid fit - callers gate on floor.ok explicitly.
+# ---------------------------------------------------------------------------
+
+def test_build_outline_mm_falls_back_to_camera_frame_when_floor_fit_failed():
+    """use_floor=True but floor.ok is False (fit never ran / failed) must
+    fall back to camera-frame coordinates, not raise or silently use a
+    stale/zeroed floor basis."""
+    floor = loc.FloorFrame()
+    assert not floor.ok      # never fit
+    square = np.array([[10, 10], [10, 20], [20, 20], [20, 10]],
+                      dtype=np.int32).reshape(-1, 1, 2)
+    fx = fy = 100.0
+    cx = cy = 15.0
+    z = 1.0
+    poly, pts_mm = loc.build_outline_mm(square, cx, cy, fx, fy, z, floor,
+                                        use_floor=True)
+    # must match the pure camera-frame (use_floor=False) result exactly,
+    # proving the fallback kicked in rather than touching floor.u/v/n
+    # (which are None when floor.ok is False - using them would raise).
+    _, pts_mm_cam = loc.build_outline_mm(square, cx, cy, fx, fy, z, floor,
+                                         use_floor=False)
+    assert pts_mm == pts_mm_cam
+
+
+def test_to_world_xy_falls_back_when_floor_not_ok():
+    floor = loc.FloorFrame()
+    assert not floor.ok
+    P = loc.backproject(50.0, 40.0, 1.0, 100.0, 100.0, 45.0, 35.0)
+    X, Y = loc.to_world_xy(P, floor, use_floor=True)
+    assert (X, Y) == (pytest.approx(P[0]), pytest.approx(P[1]))
+
+
+def test_floorframe_fit_with_all_nan_depth_stays_not_ok():
+    depth = np.full((100, 100), np.nan, dtype=np.float32)
+    floor = loc.FloorFrame()
+    floor.fit(depth, 100.0, 100.0, 50.0, 50.0, (100, 100))
+    assert not floor.ok
+    assert floor.n is None
+
+
+def test_floorframe_fit_with_collinear_degenerate_points_stays_not_ok():
+    """A depth map that's constant along one row only (RANSAC can't find 3
+    non-collinear inlier points for a plane) must not crash and must leave
+    floor.ok False rather than fitting a garbage plane."""
+    depth = np.zeros((50, 50), dtype=np.float32)
+    depth[:] = np.nan
+    depth[25, :] = 1.0    # a single valid row - degenerate for plane fitting
+    floor = loc.FloorFrame()
+    floor.fit(depth, 100.0, 100.0, 25.0, 25.0, (50, 50))
+    assert not floor.ok
