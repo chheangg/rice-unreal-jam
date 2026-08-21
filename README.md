@@ -110,6 +110,31 @@ need per-rig calibration — if `z` looks off versus a tape measure, tune
 `metric_scale` in `depth_estimator.py`. Requires the optional DA3 install
 above; without it, it prints a warning and sends `z = -1.0`.
 
+### 2c. `lego_locator_xyz.py` — colour + shape + XYZ, and a real outline
+
+```
+python lego_locator_xyz.py 1 --osc
+```
+
+The richer tracker: per confirmed piece it reports shape (square/circle/
+cross), rotation (from an ArUco tag on the piece, if present), and metric
+X/Y/Z + real-world size in cm, using Depth Anything 3 same as `detect_xyz.py`
+(see `depth_estimator.py`). Pass a camera index as the first arg (run
+`camera_probe.py` first if unsure which index is your actual webcam, not a
+phone/Continuity Camera pretending to be index 0).
+
+With `--osc`, it sends **two** messages per confirmed piece:
+
+- `/obj` — same layout as `detect_xyz.py`: `[name, x_mm, y_mm, angle, w_cm, h_cm, z_mm]`
+- `/outline` — `[name, n_points, x1_mm, y1_mm, ..., xn_mm, yn_mm, height_cm]`,
+  the piece's real 2D silhouette (simplified contour, back-projected into the
+  same world space as `/obj`'s x/y — vertices already carry the piece's true
+  rotation) plus a fixed extrusion height (`--outline-height`, default 2cm).
+  Lets Unreal show the piece's actual outline, flat-extruded, instead of a
+  generic placeholder block. See `docs/ROADMAP.md` and
+  `tasks/2026-08-21-unreal-outline-extrude.md` for the Unreal-side plan
+  (Geometry Script polygon extrude).
+
 ### 3. No camera handy?
 
 Run `send_test.py` instead — it fakes the tracker. It sends the *same*

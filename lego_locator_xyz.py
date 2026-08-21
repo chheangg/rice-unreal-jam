@@ -29,6 +29,7 @@ colour detection still works. Install per README to enable depth.
 Controls (focus the window):
     S/V floor, Min area sliders  - colour detection (as lego_locator.py)
     f  - toggle FLOOR-frame vs CAMERA-frame coordinates
+    d  - toggle a colourised depth-map window (red=near, blue=far)
     p  - print every piece: colour/shape, XYZ, size cm, angle
     Esc / q - quit
 
@@ -37,6 +38,18 @@ geometry), ROTATION (degrees, when an ArUco tag sits on the block), and
 FLOOR-frame X/Y/Z - a ground plane fitted from the depth cloud with
 RANSAC (surface-agnostic, no floor marker; Z is height above the floor).
 Add --osc to stream [name,x_mm,y_mm,angle,w_cm,h_cm,z_mm] to Unreal.
+
+OUTLINE (for a real silhouette instead of a placeholder block in Unreal):
+each confirmed piece's contour is simplified (cv2.approxPolyDP) and its
+vertices back-projected into the same metric frame as X/Y (floor-frame by
+default), then sent as a SEPARATE message, "/outline"
+-> [name, n_points, x1_mm, y1_mm, ..., xn_mm, yn_mm, height_cm]. Since the
+vertices are already the real, rotated world positions, Unreal doesn't need
+to apply the piece's `angle` separately when building the outline mesh - just
+extrude the polygon straight up by `height_cm` (a flat, not-to-scale
+thickness; see --outline-height). This is NOT a 3D scan - it's the real 2D
+footprint extruded flat, which is enough to look like the actual shape
+instead of a generic block.
 
 Run:
     python lego_locator_xyz.py            # default camera
@@ -285,6 +298,9 @@ def main():
     ap.add_argument("--debug-size", action="store_true",
                     help="log raw pixel size and depth per piece, to check "
                          "whether pixel*depth (the real size) stays constant")
+    ap.add_argument("--outline-height", type=float, default=2.0,
+                    help="fixed extrusion height in cm sent with each piece's "
+                         "outline polygon on /outline (default 2.0)")
     args = ap.parse_args()
 
     cap = cv2.VideoCapture(as_source(args.source))
@@ -319,6 +335,7 @@ def main():
 
     t_prev, fps = time.time(), 0.0
     tracks = Tracks(settle_seconds=args.settle)
+    show_depth = False
 
     while True:
         ok, frame = cap.read()
@@ -339,11 +356,9 @@ def main():
             cv2.polylines(frame, [pts.astype(int)], True, (255, 0, 255), 2)
 
         # Refit the floor plane from the current depth map (cheap, subsampled).
-        if use_floor and depth.has_depth():
-            with depth._depth_lock:
-                dm = depth._depth
-            if dm is not None:
-                floor.fit(dm, fx, fy, cx, cy, (W, H))
+        dm = depth.latest_depth_map()
+        if use_floor and dm is not None:
+            floor.fit(dm, fx, fy, cx, cy, (W, H))
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         pieces, _ = find_pieces(hsv, s_floor, v_floor, min_area)
@@ -420,6 +435,31 @@ def main():
                         osc.send_message("/obj", [c["name"], X * 1000.0,
                                          Y * 1000.0, a_out, w_cm, h_cm,
                                          Zf * 1000.0])
+
+                        # Outline: simplify the real contour and back-project
+                        # each vertex through the same depth as the piece centre
+                        # (it's rigid and roughly flat, so one depth for the
+                        # whole polygon is a fair approximation). Vertices come
+                        # out already in world/floor space, so they carry the
+                        # piece's real rotation - Unreal just extrudes the
+                        # polygon, no separate angle needed.
+                        eps = 0.02 * cv2.arcLength(ct, True)
+                        poly = cv2.approxPolyDP(ct, eps, True).reshape(-1, 2)
+                        if len(poly) > 16:        # keep the OSC message bounded
+                            idx = np.linspace(0, len(poly) - 1, 16).astype(int)
+                            poly = poly[idx]
+                        pts_mm = []
+                        for px, py in poly:
+                            Pv = np.array([(px - cx) * zs / fx,
+                                           (py - cy) * zs / fy, zs])
+                            if use_floor and floor.ok:
+                                Xv, Yv, _ = floor.to_floor(Pv)
+                            else:
+                                Xv, Yv = Pv[0], Pv[1]
+                            pts_mm.extend([Xv * 1000.0, Yv * 1000.0])
+                        osc.send_message("/outline",
+                                         [c["name"], len(poly)] + pts_mm
+                                         + [args.outline_height])
                 else:
                     l1 = f"{c['name']}/{slot['shape']} z=? {int(rw)}x{int(rh)}px"
                     l2 = ""
@@ -445,11 +485,41 @@ def main():
                     (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         cv2.imshow(win, frame)
+
+        if show_depth:
+            if dm is not None:
+                # Nearer = brighter: invert before normalising so it reads
+                # intuitively (JET's blue=far/cold, red=near/hot).
+                valid = np.isfinite(dm)
+                if valid.any():
+                    lo, hi = dm[valid].min(), dm[valid].max()
+                    norm = np.zeros_like(dm, dtype=np.uint8)
+                    if hi > lo:
+                        inv = 1.0 - (dm - lo) / (hi - lo)
+                        norm = np.clip(inv * 255, 0, 255).astype(np.uint8)
+                    depth_vis = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+                    depth_vis[~valid] = (0, 0, 0)
+                    depth_vis = cv2.resize(depth_vis, (W, H),
+                                            interpolation=cv2.INTER_NEAREST)
+                    cv2.putText(depth_vis, f"depth map  {lo:.2f}-{hi:.2f}m "
+                                "(red=near, blue=far)", (10, 25),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+                    cv2.imshow("depth", depth_vis)
+            else:
+                blank = np.zeros((H, W, 3), np.uint8)
+                cv2.putText(blank, "depth loading / unavailable...", (10, 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 2)
+                cv2.imshow("depth", blank)
+
         key = cv2.waitKey(1) & 0xFF
         if key in (27, ord('q')):
             break
         elif key == ord('f'):
             use_floor = not use_floor
+        elif key == ord('d'):
+            show_depth = not show_depth
+            if not show_depth:
+                cv2.destroyWindow("depth")
         elif key == ord('p'):
             if report:
                 print(" | ".join(
