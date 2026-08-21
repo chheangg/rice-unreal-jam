@@ -12,6 +12,8 @@ current direction.
 ```
 MT03_RealTimeLayout/   Unreal Engine project (engine 5.8)
 detect.py              webcam block tracker -> sends OSC to Unreal
+lego_locator_xyz.py    current tracker: all colours, shape, size, XYZ
+unreal_bridge.py       turns detections into the /obj message BP_OSCreciver parses
 send_test.py           fake tracker - replays the real OSC message, no camera
 camera_probe.py        checks what OpenCV can see (indices or a phone URL)
 inspect_bp.py          debug script, run inside Unreal's embedded Python
@@ -110,6 +112,41 @@ need per-rig calibration — if `z` looks off versus a tape measure, tune
 `metric_scale` in `depth_estimator.py`. Requires the optional DA3 install
 above; without it, it prints a warning and sends `z = -1.0`.
 
+### 2c. Driving Unreal from the Lego locator
+
+`lego_locator_xyz.py` is the current tracker (all colours, shape, real size in
+cm, metric XYZ). To make it drive the Unreal scene:
+
+```
+python lego_locator_xyz.py 0 --osc --osc-verbose
+```
+
+`--osc` does **not** send the metric numbers the locator prints on screen. It
+sends the message `BP_OSCreciver` actually parses, via `unreal_bridge.py`:
+
+```
+/obj  [name:str, cx:int, cy:int, angle:int, sizeX:int, sizeY:int]
+```
+
+Two details in there are the whole reason a "working" tracker can show up as an
+empty Unreal scene, and both live in the blueprint, not the tracker:
+
+- **The blueprint reads integers.** Every field is pulled with *Get OSC Message
+  Integer at Index*. python-osc tags a Python float as OSC type `f`, and UE's
+  `GetInt32` does not coerce it - it fails and the graph gets `0`. A stream of
+  correct floats therefore parks every cube at the receiver's origin, which
+  looks exactly like "nothing arrived".
+- **The blueprint only knows four names.** Index 0 feeds a *Switch on String*
+  with cases `yel1`, `yel2`, `yel3`, `red`, each wired to one pre-placed cube
+  component. There is no spawn path, so `yellow`, `blue`, `red/cross` and
+  friends fall out the default pin and vanish. The bridge maps detections onto
+  those four names (yellows small->large, biggest red) and prints a one-time
+  warning for any colour the blueprint has no cube for.
+
+`--osc-metric` sends the rich float message
+(`[name, x_mm, y_mm, angle, long_cm, short_cm, z_mm]`) instead. The current
+blueprint **cannot** read it - it's there for when the receiver is rebuilt.
+
 ### 3. No camera handy?
 
 Run `send_test.py` instead — it fakes the tracker. It sends the *same*
@@ -163,6 +200,33 @@ iPhone is always **172.20.10.1** (Apple uses a fixed 172.20.10.0/28 subnet).
 Don't route this through a relay like ngrok: it sends video to a cloud server
 and back to a laptop three feet away, adding latency to the one thing that has
 to feel instant, and puts your camera feed on a public URL.
+
+## Nothing appears in Unreal
+
+The tracker printing detections proves the camera half works and nothing else.
+Walk the link from the Unreal end inwards - the first three checks are on the
+Unreal side, because that is where this usually fails:
+
+1. **Is `BP_OSCreciver` in the level?** It is an actor with the five cubes as
+   *components*, moved with *Set Relative Location*. If it was never dragged
+   into `NewMap`, there is nothing in the world to move. Check the Outliner.
+2. **Is the level playing?** The OSC server is created on *Event BeginPlay*.
+   In the editor with PIE stopped, nothing is listening on port 7000 at all.
+3. **Can you see the cubes at rest?** They start stacked at the actor's origin.
+   If the actor is behind the camera or a long way off, they move correctly and
+   you never see it. Point the viewport at the actor before blaming the stream.
+4. **Is anything arriving?** Run `python send_test.py --no-z --rate 2`. That
+   sends the exact legacy message with the four names the blueprint knows, no
+   camera involved. If the cubes don't move for that, the problem is entirely
+   in Unreal (steps 1-3, or the OSC plugin/port), not in the tracker.
+5. **Is the tracker sending?** `--osc-verbose` prints each outgoing `/obj`
+   line. No lines means no piece was detected in a colour the blueprint has a
+   cube for - the bridge says so once per colour.
+6. **Firewall.** OSC is UDP. Loopback is normally fine; sending from another
+   machine (`--osc-host`) needs UDP 7000 open on the Unreal box.
+
+Do not "fix" this by sending floats or richer names until the blueprint is
+rebuilt to match - see 2c above for why those silently produce nothing.
 
 ## Notes
 

@@ -417,7 +417,18 @@ def main():
     ap.add_argument("--model", default=None,
                     help="override DA3 model id (e.g. depth-anything/DA3-SMALL)")
     ap.add_argument("--osc", action="store_true",
-                    help="send [name,x,y,angle,long_cm,short_cm,z] to Unreal on /obj")
+                    help="stream to Unreal on /obj in the layout BP_OSCreciver "
+                         "actually parses: [name,cx,cy,angle,sizeX,sizeY] as "
+                         "INTEGER pixels, named yel1/yel2/yel3/red")
+    ap.add_argument("--osc-metric", action="store_true",
+                    help="instead of the blueprint-compatible message, send the "
+                         "rich float one [name,x_mm,y_mm,angle,long_cm,short_cm,"
+                         "z_mm]. The CURRENT blueprint cannot read this (it "
+                         "pulls integers and switches on yel1/yel2/yel3/red) - "
+                         "only use it once the receiver has been updated.")
+    ap.add_argument("--osc-verbose", action="store_true",
+                    help="print every OSC message as it goes out, to prove the "
+                         "tracker is sending before blaming the Unreal side")
     ap.add_argument("--osc-host", default="127.0.0.1")
     ap.add_argument("--osc-port", type=int, default=7000)
     ap.add_argument("--no-floor", action="store_true",
@@ -448,11 +459,17 @@ def main():
         print(f"FAILED to open {args.source!r}")
         return 1
 
-    osc = None
-    if args.osc:
-        from pythonosc.udp_client import SimpleUDPClient
-        osc = SimpleUDPClient(args.osc_host, args.osc_port)
-        print(f"[osc] sending /obj -> {args.osc_host}:{args.osc_port}")
+    osc = bridge = None
+    if args.osc or args.osc_metric:
+        if args.osc_metric:
+            from pythonosc.udp_client import SimpleUDPClient
+            osc = SimpleUDPClient(args.osc_host, args.osc_port)
+            print(f"[osc] METRIC /obj -> {args.osc_host}:{args.osc_port} "
+                  f"(floats; the current BP_OSCreciver will ignore these)")
+        else:
+            from unreal_bridge import UnrealBridge
+            bridge = UnrealBridge(args.osc_host, args.osc_port,
+                                  verbose=args.osc_verbose)
 
     aruco = make_aruco()
     floor = FloorFrame()
@@ -510,6 +527,7 @@ def main():
         pieces, _ = find_pieces(hsv, s_floor, v_floor, min_area)
 
         report = []
+        osc_dets = []                      # pixel-space, for the Unreal bridge
         biggest = None                     # for 'c' calibration
         for c in COLORS:
             for ct in pieces[c["name"]]:
@@ -548,6 +566,14 @@ def main():
                     long_cm_raw = short_cm_raw = None
                 slot = tracks.update(c["name"], u, v, z_da3,
                                      long_cm_raw, short_cm_raw, angle, shape)
+
+                # Feed the blueprint from PIXELS, before any of the depth/size
+                # gates below. The blueprint does its own scaling and knows
+                # nothing about centimetres, so making it wait for DA3 to load
+                # and a size to lock would just mean an empty Unreal scene for
+                # the first few seconds - or forever, on a machine with no GPU.
+                osc_dets.append((c["name"], cv2.contourArea(ct),
+                                 (u, v, angle or 0.0, long_px, short_px)))
 
                 # While a NEW kind of piece is settling, draw it dim + show a
                 # countdown; only a CONFIRMED piece is reported and sent on.
@@ -619,6 +645,8 @@ def main():
                             0.5, c["draw"], 2)
                 cv2.putText(frame, l2, (x, y - 8),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, c["draw"], 2)
+        if bridge is not None:
+            bridge.send_frame(osc_dets)
         tracks.age()
 
         # HUD

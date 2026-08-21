@@ -1,2 +1,3 @@
 # vendored DA3 checkout (has its own .git; install per README instead)
 Depth-Anything-3/
+__pycache__/

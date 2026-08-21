@@ -122,6 +122,18 @@ despite how it's sometimes referred to). Design notes:
 - Code goes in the **file**, never pasted into the terminal; run with `python detect.py`.
 - Any OSC "Get ... at Index" node in Blueprint has an exec pin — **must be threaded into the execution chain** or it's pruned and reads 0.
 - Scale divisor that worked previously: **÷50** (not ÷100).
+- **The receiver reads INTEGERS, and silently zeroes anything else.** Every
+  field comes off *Get OSC Message Integer at Index*; python-osc tags a Python
+  float as OSC `f`, and UE's `GetInt32` does not coerce it. The log says
+  `OSCData not Int32: index '1'` and the graph gets `0`, so every cube parks at
+  the receiver's origin — indistinguishable from "no OSC arrived". Confirmed
+  2026-08-20 as the reason `lego_locator_xyz.py --osc` showed nothing in
+  Unreal. `unreal_bridge.py` now owns the wire format so this can't drift again.
+- The Switch on String has exactly four cases (`yel1`/`yel2`/`yel3`/`red`),
+  each wired to a pre-placed cube **component** on `BP_OSCreciver`. No spawn
+  path exists yet, so any other name falls out the default pin and vanishes,
+  and the actor must be present in the level and PIE running for any of it to
+  do anything.
 - Marker/tag color (or ArUco tag itself) must not collide with a tracked shape's own color.
 - Lighting has an outsized effect on stability — bring the flashlight.
 - Plain `minAreaRect` angle is 180°-ambiguous; ArUco avoids this entirely (true 0–360°).
@@ -134,6 +146,13 @@ despite how it's sometimes referred to). Design notes:
 1. [ ] Run the HSV tuner on all 5 Lego colors under demo lighting; record ranges.
 2. [ ] Decide: pre-made meshes vs. live-generated (→ recommend pre-made).
 3. [ ] Build combined color + ArUco detection script (position, rotation, ID, shape/color label).
-4. [ ] Build Unreal ID-based spawn/update receiver.
+4. [ ] Build Unreal ID-based spawn/update receiver. Concretely, this is what
+   unblocks the current tracker: spawn per unseen name instead of switching
+   onto four fixed cubes, and read **floats** (`Get OSC Message Float at
+   Index`) so the metric stream can be used as-is. `lego_locator_xyz.py
+   --osc-metric` already sends
+   `[name, x_mm, y_mm, angle, long_cm, short_cm, z_mm]` for exactly this; until
+   the receiver lands, plain `--osc` downgrades to the legacy int/pixel
+   message via `unreal_bridge.py`.
 5. [ ] Add one "wow" feature only.
 6. [ ] Harden + rehearse.
