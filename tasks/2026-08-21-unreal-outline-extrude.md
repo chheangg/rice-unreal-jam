@@ -1,9 +1,47 @@
 ---
-status: open        # open | in-progress | done
+status: in-progress # open | in-progress | done
 requested-by: ibrahimaasim
 assigned-to: evan
 date: 2026-08-21
 ---
+
+## Update 2026-08-21 (Claude, third pass) - C++ implementation written, needs a compile pass
+
+Wrote an actual implementation instead of leaving this as a Blueprint task:
+`MT03_RealTimeLayout/Source/MT03_RealTimeLayout/LegoOscSubsystem.h/.cpp`
+(+ the `.Target.cs`/`.Build.cs` files and `Modules` entry in the `.uproject`
+needed to make this a C++ project at all - it was pure Blueprint before).
+
+It's a `UWorldSubsystem`, so **no Blueprint wiring or manual actor placement
+is needed** - Unreal instantiates one automatically per World the moment a
+level starts (PIE or packaged). On `Initialize()` it starts an OSC server on
+`127.0.0.1:7000` and on each `/outline` message it rebuilds that piece's
+mesh via `GeometryScript`'s `AppendExtrudedPolygon`, using the vertices
+(already absolute world-space, already carrying true rotation) and the
+fixed `height_cm` - same design as the extrude plan below, just as compiled
+code instead of a graph.
+
+**This has NOT been compiled or opened in the Editor** - written without
+engine access, so treat it as a strong first draft, not verified working.
+The most likely things to need a small fix on first compile (each is
+flagged inline in the `.cpp` with a "CHECK IF THIS DOESN'T COMPILE" comment
+naming the Blueprint-node equivalent to cross-reference): the exact
+`UOSCManager::CreateOSCServer` parameter list, the `OnOscMessageReceived`
+delegate signature on `UOSCServer`, `FOSCAddress::GetFullPath()`, and
+`AppendExtrudedPolygon`'s parameter list. All are real, documented 5.x APIs
+- the risk is signature drift between engine versions, not made-up
+functions - so a compile error here should be a quick one-line fix, not a
+redesign.
+
+**To pick this up:** open the project in 5.8 (first open will prompt to
+build the new C++ module - accept it), fix whatever the compiler flags, hit
+Play, and confirm pieces show up as their real extruded outline instead of
+nothing/a cube. If `BP_OSCreciver` (the pre-existing Blueprint) still
+spawns its own placeholder per `/obj`, decide whether to disable/delete it
+or leave both running - two receivers reacting to the same OSC stream would
+double up actors, so pick one.
+
+## Original task (Blueprint version - superseded above if the C++ path works)
 
 ## What
 
