@@ -572,10 +572,15 @@ def main():
                                    w_cm, h_cm, slot["angle"]))
                     if osc is not None:
                         a_out = 0.0 if slot["angle"] is None else slot["angle"]
-                        # meters -> mm for Unreal; keep the /obj layout
+                        # meters -> mm for Unreal; keep the /obj layout - new
+                        # fields always APPENDED at the end (see README) so
+                        # existing "Get at Index N" nodes keep working.
+                        # shape (square/rectangle/circle/cross/?) lets Unreal
+                        # pick a fallback mesh per-category without needing
+                        # the full /outline extrude pipeline built first.
                         osc.send_message("/obj", [c["name"], X * 1000.0,
                                          Y * 1000.0, a_out, w_cm, h_cm,
-                                         Zf * 1000.0])
+                                         Zf * 1000.0, slot["shape"]])
 
                         # Outline: simplify the real contour and back-project
                         # each vertex through the same depth as the piece centre

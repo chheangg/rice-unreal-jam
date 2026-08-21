@@ -125,7 +125,14 @@ phone/Continuity Camera pretending to be index 0).
 
 With `--osc`, it sends **two** messages per confirmed piece:
 
-- `/obj` — same layout as `detect_xyz.py`: `[name, x_mm, y_mm, angle, w_cm, h_cm, z_mm]`
+- `/obj` — same layout as `detect_xyz.py` with one field appended:
+  `[name, x_mm, y_mm, angle, w_cm, h_cm, z_mm, shape]`, where `shape` is
+  `square`/`rectangle`/`circle`/`cross`/`?` (see `classify_shape()` in
+  `lego_locator.py`). Appended at the end, same convention as `z_mm` before
+  it, so any existing "Get at Index 0..6" node keeps working - just add a
+  "Get at Index 7" for `shape`. This is a cheap way for Unreal to pick a
+  fallback mesh per category without needing the full `/outline` extrude
+  pipeline built first.
 - `/outline` — `[name, n_points, x1_mm, y1_mm, ..., xn_mm, yn_mm, height_cm]`,
   the piece's real 2D silhouette (simplified contour, back-projected into the
   same world space as `/obj`'s x/y — vertices already carry the piece's true
