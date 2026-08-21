@@ -152,9 +152,29 @@ tracked in `tasks/2026-08-21-unreal-outline-extrude.md`.
 
 ## Next actions
 
-1. [ ] Run the HSV tuner on all 5 Lego colors under demo lighting; record ranges.
-2. [ ] Decide: pre-made meshes vs. live-generated (→ recommend pre-made).
-3. [ ] Build combined color + ArUco detection script (position, rotation, ID, shape/color label).
-4. [ ] Build Unreal ID-based spawn/update receiver.
+1. [ ] Run the HSV tuner on all 5 Lego colors under demo lighting; record
+   ranges. Needs a live camera/rig - not something an agent without camera
+   access can do; still open for whoever has the physical setup.
+2. [x] Decide: pre-made meshes vs. live-generated → resolved 2026-08-21 as
+   neither exactly - flat-extrude the real detected outline instead (see
+   "Real outline instead of a placeholder block" above). `/obj` also now
+   carries a `shape` category field as a cheap fallback if the extrude
+   pipeline isn't ready in time for a demo.
+3. [x] Build combined color + ArUco detection script (position, rotation,
+   ID, shape/color label) → `lego_locator_xyz.py` does this (color +
+   ArUco tag ID/rotation + `classify_shape()` + metric X/Y/Z).
+4. [ ] Build Unreal ID-based spawn/update receiver → `BP_OSCreciver` exists
+   but its current logic can't be verified without opening the Editor (no
+   Editor access in this environment); GeometryScripting plugin is now
+   enabled so the outline-extrude half of this is unblocked once someone's
+   in the Editor. See `tasks/2026-08-21-unreal-outline-extrude.md`.
 5. [ ] Add one "wow" feature only.
 6. [ ] Harden + rehearse.
+7. [ ] See `docs/PRODUCTION_READINESS.md` for concrete gaps found reading
+   the current `lego_locator_xyz.py`/`depth_estimator.py` pipeline. Several
+   items there are now fixed this session (config persistence, ArUco ID
+   discard, degenerate `/outline` polygons, floor-frame 180° flip,
+   camera-opens-on-import); same-colour piece identity swap is only
+   partially fixed (protected when an ArUco tag is present, not for
+   untagged pieces) — still worth a pass before any unattended
+   multi-hour run.

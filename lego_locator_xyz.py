@@ -29,14 +29,38 @@ colour detection still works. Install per README to enable depth.
 Controls (focus the window):
     S/V floor, Min area sliders  - colour detection (as lego_locator.py)
     f  - toggle FLOOR-frame vs CAMERA-frame coordinates
+    d  - toggle a colourised depth-map window (red=near, blue=far)
     p  - print every piece: colour/shape, XYZ, size cm, angle
+    s  - save current sliders + --fov/--outline-height/--osc-host/
+         --osc-port/--settle to lego_locator_config.json, so the next run
+         starts from this tuning instead of the hardcoded defaults (see
+         locator_config.py) - CLI flags passed explicitly still override
+         whatever's in the file
     Esc / q - quit
+
+CONFIG PERSISTENCE: on startup, argparse defaults for --fov/
+--outline-height/--osc-host/--osc-port/--settle and the initial slider
+positions are seeded from lego_locator_config.json if present (falls back
+to the hardcoded defaults otherwise). Press 's' any time to save the
+CURRENT sliders + flags back to that file.
 
 Also reports, per piece: SHAPE (square/circle/cross, from contour
 geometry), ROTATION (degrees, when an ArUco tag sits on the block), and
 FLOOR-frame X/Y/Z - a ground plane fitted from the depth cloud with
 RANSAC (surface-agnostic, no floor marker; Z is height above the floor).
 Add --osc to stream [name,x_mm,y_mm,angle,w_cm,h_cm,z_mm] to Unreal.
+
+OUTLINE (for a real silhouette instead of a placeholder block in Unreal):
+each confirmed piece's contour is simplified (cv2.approxPolyDP) and its
+vertices back-projected into the same metric frame as X/Y (floor-frame by
+default), then sent as a SEPARATE message, "/outline"
+-> [name, n_points, x1_mm, y1_mm, ..., xn_mm, yn_mm, height_cm]. Since the
+vertices are already the real, rotated world positions, Unreal doesn't need
+to apply the piece's `angle` separately when building the outline mesh - just
+extrude the polygon straight up by `height_cm` (a flat, not-to-scale
+thickness; see --outline-height). This is NOT a 3D scan - it's the real 2D
+footprint extruded flat, which is enough to look like the actual shape
+instead of a generic block.
 
 Run:
     python lego_locator_xyz.py            # default camera
@@ -54,9 +78,9 @@ from collections import Counter, deque
 import cv2
 import numpy as np
 
-from lego_locator import (COLORS, find_pieces, as_source, classify_shape,
-                          DEFAULT_S_FLOOR, DEFAULT_V_FLOOR, DEFAULT_MIN_AREA_100)
+from lego_locator import COLORS, find_pieces, as_source, classify_shape
 from depth_estimator import DepthEstimator
+import locator_config
 
 ARUCO_DICT = "DICT_4X4_50"          # matches generate_aruco_tags.py
 
@@ -76,7 +100,15 @@ def make_aruco():
 
 
 def detect_markers(gray, state):
-    """Return [(center_xy, angle_deg, corners)] for every tag found."""
+    """Return [(center_xy, angle_deg, corners, marker_id)] for every tag
+    found. marker_id is the tag's actual encoded ArUco ID (0-49 for
+    DICT_4X4_50) - a stable per-physical-tag identity, distinct from
+    position. Previously this function detected ids but discarded them
+    (zipped corners against nothing), so two tagged pieces of the same
+    colour were indistinguishable to anything downstream except by pixel
+    position - see Tracks.update()'s tag_id parameter, which uses this to
+    avoid the same-colour identity-swap failure mode documented in
+    docs/PRODUCTION_READINESS.md #5."""
     mode, obj = state
     if mode == "new":
         corners, ids, _ = obj.detectMarkers(gray)
@@ -86,12 +118,12 @@ def detect_markers(gray, state):
     out = []
     if ids is None:
         return out
-    for c in corners:
+    for c, mid in zip(corners, ids.ravel()):
         pts = c.reshape(4, 2)                 # TL, TR, BR, BL
         center = pts.mean(axis=0)
         tl, tr = pts[0], pts[1]
         angle = math.degrees(math.atan2(tr[1] - tl[1], tr[0] - tl[0])) % 360.0
-        out.append((center, angle, pts))
+        out.append((center, angle, pts, int(mid)))
     return out
 
 
@@ -156,13 +188,36 @@ class FloorFrame:
         # normal should point toward the camera (origin) so height is +ve up
         if nrm.dot(-p0) < 0:
             nrm = -nrm
-        # in-plane basis
+        uax, vax = self._basis_for_normal(nrm)
+        self.n, self.p0, self.u, self.v, self.ok = nrm, p0, uax, vax, True
+
+    def _basis_for_normal(self, nrm):
+        """In-plane basis (uax, vax) for unit normal `nrm`. `fit()` runs
+        every frame (the camera/floor are assumed fixed, but depth noise
+        still perturbs the recovered normal slightly frame to frame), so
+        this basis must stay CONTINUOUS across calls - otherwise every
+        /obj X/Y and every /outline vertex jumps whenever the fitted normal
+        happens to cross a hardcoded axis-alignment threshold. (Confirmed:
+        picking the seed purely from `abs(nrm.dot(seed)) > 0.9` flips u/v by
+        180 degrees for two nrm values on either side of that threshold -
+        see tests/test_coords.py::test_floorframe_basis_does_not_flip_...)
+        Fix: reuse the PREVIOUS fit's u axis, projected onto the new plane,
+        as this fit's u - a small normal change only rotates u/v slightly,
+        never flips them. Only the very first fit (no previous self.u yet)
+        falls back to a fixed world-axis seed."""
+        if self.u is not None:
+            proj = self.u - nrm * nrm.dot(self.u)
+            proj_len = np.linalg.norm(proj)
+            if proj_len > 1e-6:            # not degenerate (normal didn't
+                uax = proj / proj_len       # rotate ~90deg since last fit)
+                vax = np.cross(nrm, uax)
+                return uax, vax
         seed = np.array([1.0, 0.0, 0.0])
         if abs(nrm.dot(seed)) > 0.9:
             seed = np.array([0.0, 1.0, 0.0])
         uax = np.cross(nrm, seed); uax /= np.linalg.norm(uax)
         vax = np.cross(nrm, uax)
-        self.n, self.p0, self.u, self.v, self.ok = nrm, p0, uax, vax, True
+        return uax, vax
 
     def to_floor(self, P_cam):
         """Camera 3D point -> (X_floor, Y_floor, height) in meters."""
@@ -180,6 +235,20 @@ class Tracks:
     still comes through, just settled over a few frames rather than flickering.
     Pixel centroid is NOT smoothed (position already looks good, and we want it
     responsive); only z and cm are.
+
+    IDENTITY: when a detection carries an ArUco tag_id, it's a hard identity
+    key - matching first looks for an existing slot already carrying that
+    exact tag_id (matched regardless of distance, since the tag ID is
+    unambiguous even if the piece moved fast). Failing that, nearest-centroid
+    matching runs only over slots that are untagged or share this tag_id -
+    a slot already locked to a DIFFERENT tag_id is excluded, so a tagged
+    piece can never steal another tagged piece's slot just by passing near
+    it. This is what fixes the same-colour identity-swap failure mode
+    documented in docs/PRODUCTION_READINESS.md #5 - for TAGGED pieces only.
+    An untagged detection (no ArUco tag, or tag not currently visible) still
+    falls back to plain nearest-centroid over every slot of that colour,
+    tagged or not - the original failure mode is unchanged for untagged
+    pieces, since position is genuinely the only signal available for them.
     """
     def __init__(self, alpha=0.25, match_dist=90, max_miss=15,
                  settle_seconds=3.0, size_alpha=0.12):
@@ -191,23 +260,52 @@ class Tracks:
                                                 # long before it's "confirmed"
         self.slots = {}                         # colour name -> list of slots
 
-    def update(self, color, cx, cy, z, w_cm, h_cm, angle=None, shape=None):
+    def update(self, color, cx, cy, z, w_cm, h_cm, angle=None, shape=None,
+               tag_id=None):
         now = time.time()
         lst = self.slots.setdefault(color, [])
+
         best, best_d = None, 1e9
-        for s in lst:
-            d = math.hypot(s["cx"] - cx, s["cy"] - cy)
-            if d < best_d:
-                best, best_d = s, d
-        if best is None or best_d > self.match_dist:
+        if tag_id is not None:
+            # Hard identity match first: a slot already carrying this exact
+            # tag wins outright, no distance limit.
+            for s in lst:
+                if s.get("tag_id") == tag_id:
+                    best = s
+                    break
+            if best is None:
+                # No slot owns this tag yet - nearest-centroid, but ONLY
+                # among slots that aren't already a DIFFERENT tag's slot.
+                for s in lst:
+                    if s.get("tag_id") is not None and s["tag_id"] != tag_id:
+                        continue
+                    d = math.hypot(s["cx"] - cx, s["cy"] - cy)
+                    if d < best_d:
+                        best, best_d = s, d
+                if best is not None and best_d > self.match_dist:
+                    best = None
+        else:
+            # No tag on this detection: original behaviour, nearest-centroid
+            # over every slot regardless of tag ownership (position is the
+            # only signal available).
+            for s in lst:
+                d = math.hypot(s["cx"] - cx, s["cy"] - cy)
+                if d < best_d:
+                    best, best_d = s, d
+            if best is not None and best_d > self.match_dist:
+                best = None
+
+        if best is None:
             # brand-new piece: start its settle timer, not confirmed yet
             best = {"cx": cx, "cy": cy, "z": z, "w_cm": w_cm, "h_cm": h_cm,
                     "w_samps": deque(maxlen=90), "h_samps": deque(maxlen=90),
                     "size_locked": False,
                     "angle": angle, "_phasor": None, "shapes": deque(maxlen=9),
-                    "shape": shape, "miss": 0,
+                    "shape": shape, "miss": 0, "tag_id": tag_id,
                     "first_seen": now, "confirmed": False}
             lst.append(best)
+        elif tag_id is not None and best.get("tag_id") is None:
+            best["tag_id"] = tag_id           # adopt: first tag sighting on this slot
         best["cx"], best["cy"], best["miss"] = cx, cy, 0
         # confirm once it has been seen continuously for settle_seconds. A piece
         # that leaves for > max_miss frames is dropped by age(), so putting a
@@ -264,27 +362,79 @@ def resolve_intrinsics(depth, frame_w, frame_h, assumed_fov_deg):
     return (f, f, frame_w / 2.0, frame_h / 2.0), f"FOV{assumed_fov_deg:g}"
 
 
+def backproject(u, v, z, fx, fy, cx, cy):
+    """Pixel (u, v) at depth z (meters) -> camera-frame 3D point (meters).
+    (0,0,0) is the camera, +X right, +Y down, +Z forward."""
+    return np.array([(u - cx) * z / fx, (v - cy) * z / fy, z])
+
+
+def to_world_xy(P_cam, floor, use_floor):
+    """Camera-frame point -> (X, Y) in whichever frame is active (meters).
+    FLOOR frame when requested and the plane fit succeeded, else CAMERA
+    frame (X, Y straight from back-projection, no floor-relative height)."""
+    if use_floor and floor.ok:
+        X, Y, _ = floor.to_floor(P_cam)
+        return X, Y
+    return float(P_cam[0]), float(P_cam[1])
+
+
+def build_outline_mm(contour, cx, cy, fx, fy, z, floor, use_floor,
+                      max_points=16):
+    """Simplify a piece's contour (cv2.approxPolyDP) and back-project each
+    vertex into world space at a single shared depth z (the piece is rigid
+    and roughly flat, so one depth for the whole polygon is a fair
+    approximation). Returns a flat [x1_mm, y1_mm, x2_mm, y2_mm, ...] list -
+    winding order is preserved from the input contour (OpenCV contours from
+    findContours are clockwise in image space); no separate angle is needed
+    since each vertex already carries the piece's true rotation.
+
+    A degenerate simplification (< 3 points - e.g. a sliver contour that
+    approxPolyDP collapses to a line or point) falls back to the contour's
+    min-area rect corners, which is always 4 points, so callers never have
+    to special-case "too few points to be a polygon" - a Geometry Script
+    polygon extrude on the Unreal side needs >= 3 vertices to mean anything.
+    Returns (poly, pts_mm) with len(poly) always >= 3 for a non-empty input
+    contour."""
+    eps = 0.02 * cv2.arcLength(contour, True)
+    poly = cv2.approxPolyDP(contour, eps, True).reshape(-1, 2)
+    if len(poly) < 3:
+        poly = cv2.boxPoints(cv2.minAreaRect(contour))
+    if len(poly) > max_points:            # keep the OSC message bounded
+        idx = np.linspace(0, len(poly) - 1, max_points).astype(int)
+        poly = poly[idx]
+    pts_mm = []
+    for px, py in poly:
+        P_cam = backproject(px, py, z, fx, fy, cx, cy)
+        Xv, Yv = to_world_xy(P_cam, floor, use_floor)
+        pts_mm.extend([Xv * 1000.0, Yv * 1000.0])
+    return poly, pts_mm
+
+
 def main():
+    saved_cfg = locator_config.load()          # falls back to hardcoded defaults
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("source", nargs="?", default="0",
                     help="camera index, stream URL, or video file (default 0)")
-    ap.add_argument("--fov", type=float, default=60.0,
+    ap.add_argument("--fov", type=float, default=saved_cfg["fov"],
                     help="assumed horizontal FOV (deg) if DA3 gives no intrinsics")
     ap.add_argument("--model", default=None,
                     help="override DA3 model id (e.g. depth-anything/DA3-SMALL)")
     ap.add_argument("--osc", action="store_true",
                     help="send [name,x,y,angle,sx,sy,z] to Unreal on /obj")
-    ap.add_argument("--osc-host", default="127.0.0.1")
-    ap.add_argument("--osc-port", type=int, default=7000)
+    ap.add_argument("--osc-host", default=saved_cfg["osc_host"])
+    ap.add_argument("--osc-port", type=int, default=saved_cfg["osc_port"])
     ap.add_argument("--no-floor", action="store_true",
                     help="report camera-frame XYZ instead of floor-frame")
-    ap.add_argument("--settle", type=float, default=3.0,
+    ap.add_argument("--settle", type=float, default=saved_cfg["settle"],
                     help="seconds a new piece must persist before it's confirmed "
                          "and reported/sent (default 3; 0 = instant)")
     ap.add_argument("--debug-size", action="store_true",
                     help="log raw pixel size and depth per piece, to check "
                          "whether pixel*depth (the real size) stays constant")
+    ap.add_argument("--outline-height", type=float, default=saved_cfg["outline_height"],
+                    help="fixed extrusion height in cm sent with each piece's "
+                         "outline polygon on /outline (default 2.0)")
     args = ap.parse_args()
 
     cap = cv2.VideoCapture(as_source(args.source))
@@ -313,12 +463,14 @@ def main():
 
     win = "Lego locator xyz"
     cv2.namedWindow(win)
-    cv2.createTrackbar("S floor", win, DEFAULT_S_FLOOR, 255, lambda v: None)
-    cv2.createTrackbar("V floor", win, DEFAULT_V_FLOOR, 255, lambda v: None)
-    cv2.createTrackbar("Min area/100", win, DEFAULT_MIN_AREA_100, 100, lambda v: None)
+    cv2.createTrackbar("S floor", win, saved_cfg["s_floor"], 255, lambda v: None)
+    cv2.createTrackbar("V floor", win, saved_cfg["v_floor"], 255, lambda v: None)
+    cv2.createTrackbar("Min area/100", win, saved_cfg["min_area_100"], 100,
+                       lambda v: None)
 
     t_prev, fps = time.time(), 0.0
     tracks = Tracks(settle_seconds=args.settle)
+    show_depth = False
 
     while True:
         ok, frame = cap.read()
@@ -334,16 +486,16 @@ def main():
         min_area = cv2.getTrackbarPos("Min area/100", win) * 100
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        markers = detect_markers(gray, aruco)     # [(center, angle, corners)]
-        for center, angle, pts in markers:
+        markers = detect_markers(gray, aruco)  # [(center, angle, corners, id)]
+        for center, angle, pts, mid in markers:
             cv2.polylines(frame, [pts.astype(int)], True, (255, 0, 255), 2)
+            cv2.putText(frame, f"#{mid}", (int(center[0]), int(center[1])),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
         # Refit the floor plane from the current depth map (cheap, subsampled).
-        if use_floor and depth.has_depth():
-            with depth._depth_lock:
-                dm = depth._depth
-            if dm is not None:
-                floor.fit(dm, fx, fy, cx, cy, (W, H))
+        dm = depth.latest_depth_map()
+        if use_floor and dm is not None:
+            floor.fit(dm, fx, fy, cx, cy, (W, H))
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         pieces, _ = find_pieces(hsv, s_floor, v_floor, min_area)
@@ -355,12 +507,17 @@ def main():
                 (u, v), (rw, rh), _ = cv2.minAreaRect(ct)
 
                 shape = classify_shape(ct)
-                # A tag whose centre falls inside this blob gives its rotation.
+                # A tag whose centre falls inside this blob gives its
+                # rotation AND its identity (tag_id) - tag_id is a hard
+                # identity key Tracks.update() prefers over nearest-centroid
+                # matching, so two same-colour pieces crossing paths don't
+                # swap slots (docs/PRODUCTION_READINESS.md #5).
                 angle = None
-                for center, ang, _pts in markers:
+                tag_id = None
+                for center, ang, _pts, mid in markers:
                     if cv2.pointPolygonTest(ct, (float(center[0]),
                                                  float(center[1])), False) >= 0:
-                        angle = ang
+                        angle, tag_id = ang, mid
                         break
 
                 # Depth sampled ONLY inside the piece (eroded a few px so the
@@ -378,10 +535,10 @@ def main():
                     w_cm_raw = (rw / fx) * z * 100.0
                     h_cm_raw = (rh / fy) * z * 100.0
                     slot = tracks.update(c["name"], u, v, z, w_cm_raw, h_cm_raw,
-                                         angle, shape)
+                                         angle, shape, tag_id)
                 else:
                     slot = tracks.update(c["name"], u, v, None, None, None,
-                                         angle, shape)
+                                         angle, shape, tag_id)
 
                 # While a new piece is settling, draw it dim + show a countdown;
                 # only a CONFIRMED piece (held 3s) is reported and sent to Unreal.
@@ -395,8 +552,7 @@ def main():
                 cv2.drawContours(frame, [ct], -1, c["draw"], 2)   # real outline
                 if z is not None:
                     zs, w_cm, h_cm = slot["z"], slot["w_cm"], slot["h_cm"]
-                    P_cam = np.array([(u - cx) * zs / fx,
-                                      (v - cy) * zs / fy, zs])
+                    P_cam = backproject(u, v, zs, fx, fy, cx, cy)
                     if use_floor and floor.ok:
                         X, Y, Zf = floor.to_floor(P_cam)   # floor frame, height
                         frame_tag = "flr"
@@ -416,10 +572,29 @@ def main():
                                    w_cm, h_cm, slot["angle"]))
                     if osc is not None:
                         a_out = 0.0 if slot["angle"] is None else slot["angle"]
-                        # meters -> mm for Unreal; keep the /obj layout
+                        # meters -> mm for Unreal; keep the /obj layout - new
+                        # fields always APPENDED at the end (see README) so
+                        # existing "Get at Index N" nodes keep working.
+                        # shape (square/rectangle/circle/cross/?) lets Unreal
+                        # pick a fallback mesh per-category without needing
+                        # the full /outline extrude pipeline built first.
                         osc.send_message("/obj", [c["name"], X * 1000.0,
                                          Y * 1000.0, a_out, w_cm, h_cm,
-                                         Zf * 1000.0])
+                                         Zf * 1000.0, slot["shape"]])
+
+                        # Outline: simplify the real contour and back-project
+                        # each vertex through the same depth as the piece centre
+                        # (it's rigid and roughly flat, so one depth for the
+                        # whole polygon is a fair approximation). Vertices come
+                        # out already in world/floor space, so they carry the
+                        # piece's real rotation - Unreal just extrudes the
+                        # polygon, no separate angle needed.
+                        poly, pts_mm = build_outline_mm(
+                            ct, cx, cy, fx, fy, zs, floor, use_floor)
+                        if len(poly) >= 3:     # never send a degenerate polygon
+                            osc.send_message("/outline",
+                                             [c["name"], len(poly)] + pts_mm
+                                             + [args.outline_height])
                 else:
                     l1 = f"{c['name']}/{slot['shape']} z=? {int(rw)}x{int(rh)}px"
                     l2 = ""
@@ -445,11 +620,41 @@ def main():
                     (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         cv2.imshow(win, frame)
+
+        if show_depth:
+            if dm is not None:
+                # Nearer = brighter: invert before normalising so it reads
+                # intuitively (JET's blue=far/cold, red=near/hot).
+                valid = np.isfinite(dm)
+                if valid.any():
+                    lo, hi = dm[valid].min(), dm[valid].max()
+                    norm = np.zeros_like(dm, dtype=np.uint8)
+                    if hi > lo:
+                        inv = 1.0 - (dm - lo) / (hi - lo)
+                        norm = np.clip(inv * 255, 0, 255).astype(np.uint8)
+                    depth_vis = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+                    depth_vis[~valid] = (0, 0, 0)
+                    depth_vis = cv2.resize(depth_vis, (W, H),
+                                            interpolation=cv2.INTER_NEAREST)
+                    cv2.putText(depth_vis, f"depth map  {lo:.2f}-{hi:.2f}m "
+                                "(red=near, blue=far)", (10, 25),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+                    cv2.imshow("depth", depth_vis)
+            else:
+                blank = np.zeros((H, W, 3), np.uint8)
+                cv2.putText(blank, "depth loading / unavailable...", (10, 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 2)
+                cv2.imshow("depth", blank)
+
         key = cv2.waitKey(1) & 0xFF
         if key in (27, ord('q')):
             break
         elif key == ord('f'):
             use_floor = not use_floor
+        elif key == ord('d'):
+            show_depth = not show_depth
+            if not show_depth:
+                cv2.destroyWindow("depth")
         elif key == ord('p'):
             if report:
                 print(" | ".join(
@@ -458,6 +663,15 @@ def main():
                     for (n, sh, X, Y, Z, w, h, ang) in report))
             else:
                 print("no pieces with depth yet")
+        elif key == ord('s'):
+            saved = locator_config.save({
+                "s_floor": s_floor, "v_floor": v_floor,
+                "min_area_100": min_area // 100,
+                "fov": args.fov, "outline_height": args.outline_height,
+                "osc_host": args.osc_host, "osc_port": args.osc_port,
+                "settle": args.settle,
+            })
+            print(f"[config] saved to {locator_config.DEFAULT_PATH}: {saved}")
 
     depth.stop()
     cap.release()

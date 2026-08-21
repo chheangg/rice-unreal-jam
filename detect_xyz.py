@@ -40,15 +40,6 @@ MIN_AREA = 600        # min block size (lower if smallest yellow is missed)
 
 Z_MISSING = -1.0      # sentinel z when depth isn't available
 
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("Camera not found — try index 1 or 2")
-    exit()
-
-# Start depth estimation on a background thread (see depth_estimator.py).
-depth = DepthEstimator()
-depth.start()
-
 
 # find blobs of a color → list of dicts with center, size, box, contour
 def find_blobs(hsv, ranges, min_area):
@@ -69,7 +60,7 @@ def find_blobs(hsv, ranges, min_area):
     return out
 
 
-def send(name, b, frame, color):
+def send(name, b, frame, color, depth):
     # angle stays 0 (no direction marker anymore) - kept in the OSC message so
     # existing "Get at Index 0..5" nodes on the Unreal Blueprint still line up.
     angle = 0
@@ -84,39 +75,58 @@ def send(name, b, frame, color):
     print(f"{name} pos={b['cx']},{b['cy']} size={b['sx']}x{b['sy']} z={z_val}")
 
 
-try:
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
+def main():
+    # cv2.VideoCapture(0) and DepthEstimator() (which loads/downloads a
+    # model) used to run at module import time - meaning `import detect_xyz`
+    # alone opened a real camera AND started loading DA3. Guarding both
+    # behind main()/__name__ makes this file safe to import without side
+    # effects (e.g. for a future test importing find_blobs()).
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Camera not found — try index 1 or 2")
+        return
 
-        # Hand the newest frame to the depth worker (non-blocking).
-        depth.submit(frame)
+    # Start depth estimation on a background thread (see depth_estimator.py).
+    depth = DepthEstimator()
+    depth.start()
 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    try:
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
 
-        # YELLOW: sort by size, assign small/med/large -> yel1/yel2/yel3
-        yellows = find_blobs(hsv, YELLOW, MIN_AREA)
-        yellows.sort(key=lambda b: b["area"])          # smallest first
-        labels = ["yel1", "yel2", "yel3"]
-        for i, b in enumerate(yellows[:3]):            # up to 3
-            send(labels[i], b, frame, (0, 255, 255))
+            # Hand the newest frame to the depth worker (non-blocking).
+            depth.submit(frame)
 
-        # RED: biggest one -> red
-        reds = find_blobs(hsv, RED, MIN_AREA)
-        if reds:
-            b = max(reds, key=lambda b: b["area"])
-            send("red", b, frame, (0, 0, 255))
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        status = "DEPTH ON" if (depth.available and depth.has_depth()) else \
-                 ("DEPTH loading..." if depth.available else "DEPTH OFF (2D only)")
-        cv2.putText(frame, status, (10, 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            # YELLOW: sort by size, assign small/med/large -> yel1/yel2/yel3
+            yellows = find_blobs(hsv, YELLOW, MIN_AREA)
+            yellows.sort(key=lambda b: b["area"])          # smallest first
+            labels = ["yel1", "yel2", "yel3"]
+            for i, b in enumerate(yellows[:3]):            # up to 3
+                send(labels[i], b, frame, (0, 255, 255), depth)
 
-        cv2.imshow("Detection (xyz)", frame)
-        if cv2.waitKey(1) == 27:
-            break
-finally:
-    depth.stop()
-    cap.release()
-    cv2.destroyAllWindows()
+            # RED: biggest one -> red
+            reds = find_blobs(hsv, RED, MIN_AREA)
+            if reds:
+                b = max(reds, key=lambda b: b["area"])
+                send("red", b, frame, (0, 0, 255), depth)
+
+            status = "DEPTH ON" if (depth.available and depth.has_depth()) else \
+                     ("DEPTH loading..." if depth.available else "DEPTH OFF (2D only)")
+            cv2.putText(frame, status, (10, 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+            cv2.imshow("Detection (xyz)", frame)
+            if cv2.waitKey(1) == 27:
+                break
+    finally:
+        depth.stop()
+        cap.release()
+        cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()

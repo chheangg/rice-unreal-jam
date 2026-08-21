@@ -111,6 +111,9 @@ class DepthEstimator:
             # Harmless on non-Mac. Must be set before torch is imported.
             import os
             os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+            # torch's bundled libomp and another linked copy (e.g. from opencv)
+            # both try to init on Mac, which OpenMP treats as fatal by default.
+            os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
             import torch
             self._stub_unused_export_deps()
@@ -223,6 +226,13 @@ class DepthEstimator:
     def has_depth(self):
         with self._depth_lock:
             return self._depth is not None
+
+    def latest_depth_map(self):
+        """Copy of the latest metric depth map (HxW float32, meters), or None.
+        Small (DA3's inference resolution, not the camera's) - resize to the
+        preview frame's size before overlaying it."""
+        with self._depth_lock:
+            return None if self._depth is None else self._depth.copy()
 
     def intrinsics_for_frame(self):
         """
