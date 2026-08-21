@@ -1,11 +1,11 @@
 # Graph Report - rice-unreal-jam  (2026-08-21)
 
 ## Corpus Check
-- 76 files · ~129,675 words
+- 76 files · ~130,237 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 397 nodes · 624 edges · 27 communities (20 shown, 7 thin omitted)
+- 401 nodes · 629 edges · 28 communities (21 shown, 7 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
@@ -36,6 +36,7 @@
 - Community 23
 - Community 24
 - Community 25
+- Community 26
 
 ## God Nodes (most connected - your core abstractions)
 1. `DepthEstimator` - 24 edges
@@ -67,7 +68,7 @@
 ## Hyperedges (group relationships)
 - **Task Filing Workflow** — agents_task_workflow, tasks_readme_doc, tasks_readme_task_lifecycle, tasks_template_doc [EXTRACTED 1.00]
 
-## Communities (27 total, 7 thin omitted)
+## Communities (28 total, 7 thin omitted)
 
 ### Community 0 - "AGENTS.md Collaboration Guide"
 Cohesion: 0.06
@@ -102,46 +103,50 @@ Cohesion: 0.12
 Nodes (17): FString, FSubsystemCollectionBase, int32, ADynamicMeshActor, FLegoPieceState, Actor, LastSeenSeconds, FOSCMessage (+9 more)
 
 ### Community 8 - "README OSC Networking"
-Cohesion: 0.11
-Nodes (20): backproject(), build_outline_mm(), Pixel (u, v) at depth z (meters) -> camera-frame 3D point (meters). (0,0,0) is…, Camera-frame point -> (X, Y) in whichever frame is active (meters). FLOOR frame…, Simplify a piece's contour (cv2.approxPolyDP) and back-project each vertex into…, to_world_xy(), No floor fit available (use_floor=False path) - outline vertices should be…, Vertex order out must match approxPolyDP's order on the input contour - Unreal… (+12 more)
-
-### Community 9 - "OSC Send Test Script"
-Cohesion: 0.18
-Nodes (17): classify_shape(), Label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'.…, _FakeDepthUnavailable, Synthetic, camera-free tests for the coordinate/size/outline math in…, A piece clipped by the frame edge (negative/zero-origin coordinates, as OpenCV…, A near-zero-width contour (e.g. a color mask artifact/shadow edge) must not…, test_classify_shape_circle(), test_classify_shape_cross_is_concave() (+9 more)
-
-### Community 10 - "Community 10"
 Cohesion: 0.20
 Nodes (15): as_source(), color_mask(), find_pieces(), main(), lego_locator.py - universal Lego colour locator (step 1: reliable detection).…, Binary mask for one colour: its hue band(s), floored on S and V., Return {color_name: [contours]} and {color_name: mask}., detect_markers() (+7 more)
 
-### Community 11 - "Community 11"
+### Community 9 - "OSC Send Test Script"
 Cohesion: 0.20
 Nodes (15): load(), locator_config.py - persisted tuning for lego_locator_xyz.py, so a rig's…, DEFAULTS merged with whatever `path` has, ignoring unknown keys and falling…, Write only the known keys (ignores extras the caller's dict might carry),…, save(), Tests for locator_config.py (config persistence, docs/PRODUCTION_READINESS.md…, test_load_corrupt_json_falls_back_to_defaults(), test_load_ignores_unknown_keys_in_file() (+7 more)
 
-### Community 12 - "Community 12"
+### Community 10 - "Community 10"
+Cohesion: 0.21
+Nodes (15): classify_shape(), Label a piece contour as 'square', 'rectangle', 'circle', 'cross', or '?'.…, Synthetic, camera-free tests for the coordinate/size/outline math in…, A piece clipped by the frame edge (negative/zero-origin coordinates, as OpenCV…, A near-zero-width contour (e.g. a color mask artifact/shadow edge) must not…, test_classify_shape_circle(), test_classify_shape_cross_is_concave(), test_classify_shape_frame_edge_contour_still_classifies() (+7 more)
+
+### Community 11 - "Community 11"
 Cohesion: 0.15
 Nodes (12): detect.py, Git LFS Usage, inspect_bp.py, MechTwin03, MT03_RealTimeLayout (Unreal Project), OSC Protocol Link, Roadmap-Update Practice, send_test.py (+4 more)
 
+### Community 12 - "Community 12"
+Cohesion: 0.21
+Nodes (7): FakeBlock, FakeOutlineBlock, main(), make_names(), send_test.py - fake tracker, for testing the Unreal side without a camera.…, One block circling its own centre, with a wobbling size and depth., One piece orbiting the floor-frame origin, spinning, with a fixed local polygon…
+
 ### Community 13 - "Community 13"
+Cohesion: 0.20
+Nodes (10): backproject(), Pixel (u, v) at depth z (meters) -> camera-frame 3D point (meters). (0,0,0) is…, Camera-frame point -> (X, Y) in whichever frame is active (meters). FLOOR frame…, to_world_xy(), No floor fit available (use_floor=False path) - outline vertices should be…, test_backproject_asymmetric_focal_lengths(), test_backproject_principal_point_maps_to_zero_xy(), test_backproject_scales_linearly_with_pixel_offset_and_depth() (+2 more)
+
+### Community 14 - "Community 14"
+Cohesion: 0.20
+Nodes (10): build_outline_mm(), Simplify a piece's contour (cv2.approxPolyDP) and back-project each vertex into…, Vertex order out must match approxPolyDP's order on the input contour - Unreal…, A near-zero-area sliver contour can collapse to < 3 points under approxPolyDP -…, use_floor=True but floor.ok is False (fit never ran / failed) must fall back to…, test_build_outline_mm_caps_point_count(), test_build_outline_mm_falls_back_to_camera_frame_when_floor_fit_failed(), test_build_outline_mm_never_returns_degenerate_polygon_from_a_line() (+2 more)
+
+### Community 15 - "Community 15"
 Cohesion: 0.20
 Nodes (5): Regression tests: detect.py and detect_xyz.py used to open a real camera…, RED spans two hue ranges (near 0 and near 179) merged into one mask - both ends…, detect_xyz.py's find_blobs is a near-duplicate of detect.py's - just confirm it…, test_detect_find_blobs_red_wraps_hue_circle(), test_detect_xyz_find_blobs_matches_detect_behavior()
 
-### Community 14 - "Community 14"
+### Community 16 - "Community 16"
 Cohesion: 0.42
 Nodes (8): as_source(), describe(), main(), open_source(), preview(), camera_probe.py - check what OpenCV can actually see, before touching…, Camera index if it looks like a number, otherwise a URL/path., scan()
 
-### Community 15 - "Community 15"
-Cohesion: 0.32
-Nodes (5): FakeBlock, main(), make_names(), send_test.py - fake tracker, for testing the Unreal side without a camera.…, One block circling its own centre, with a wobbling size and depth.
-
-### Community 16 - "Community 16"
-Cohesion: 0.29
-Nodes (5): (fx, fy, cx, cy), source_label. Prefer DA3's; else assume an FOV., resolve_intrinsics(), _FakeDepthWithIntrinsics, test_resolve_intrinsics_falls_back_if_da3_returns_none(), test_resolve_intrinsics_prefers_da3_when_available()
-
 ### Community 17 - "Community 17"
+Cohesion: 0.22
+Nodes (7): (fx, fy, cx, cy), source_label. Prefer DA3's; else assume an FOV., resolve_intrinsics(), _FakeDepthUnavailable, _FakeDepthWithIntrinsics, test_resolve_intrinsics_falls_back_if_da3_returns_none(), test_resolve_intrinsics_fov_fallback_formula(), test_resolve_intrinsics_prefers_da3_when_available()
+
+### Community 18 - "Community 18"
 Cohesion: 0.40
 Nodes (3): MT03_RealTimeLayoutTarget, MT03_RealTimeLayoutEditorTarget, TargetRules
 
-### Community 18 - "Community 18"
+### Community 19 - "Community 19"
 Cohesion: 0.83
 Nodes (3): find_blobs(), main(), send()
 
@@ -153,11 +158,11 @@ Nodes (3): find_blobs(), main(), send()
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `DepthEstimator` connect `Task Filing Workflow` to `Community 10`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
-- **Why does `main()` connect `Community 10` to `Task Filing Workflow`, `README Unreal Engine Integration`, `Roadmap Living Document`, `README OSC Networking`, `OSC Send Test Script`, `Community 11`, `Community 16`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `FloorFrame` connect `Roadmap Living Document` to `README OSC Networking`, `Community 10`?**
+- **Why does `DepthEstimator` connect `Task Filing Workflow` to `README OSC Networking`?**
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+- **Why does `main()` connect `README OSC Networking` to `Task Filing Workflow`, `README Unreal Engine Integration`, `Roadmap Living Document`, `OSC Send Test Script`, `Community 10`, `Community 13`, `Community 14`, `Community 17`?**
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+- **Why does `FloorFrame` connect `Roadmap Living Document` to `README OSC Networking`, `Community 13`, `Community 14`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `DepthEstimator` (e.g. with `make_bare_estimator()` and `test_concurrent_readers_never_see_torn_state()`) actually correct?**
   _`DepthEstimator` has 5 INFERRED edges - model-reasoned connections that need verification._
