@@ -301,9 +301,19 @@ def build_outline_mm(contour, cx, cy, fx, fy, z, floor, use_floor,
     approximation). Returns a flat [x1_mm, y1_mm, x2_mm, y2_mm, ...] list -
     winding order is preserved from the input contour (OpenCV contours from
     findContours are clockwise in image space); no separate angle is needed
-    since each vertex already carries the piece's true rotation."""
+    since each vertex already carries the piece's true rotation.
+
+    A degenerate simplification (< 3 points - e.g. a sliver contour that
+    approxPolyDP collapses to a line or point) falls back to the contour's
+    min-area rect corners, which is always 4 points, so callers never have
+    to special-case "too few points to be a polygon" - a Geometry Script
+    polygon extrude on the Unreal side needs >= 3 vertices to mean anything.
+    Returns (poly, pts_mm) with len(poly) always >= 3 for a non-empty input
+    contour."""
     eps = 0.02 * cv2.arcLength(contour, True)
     poly = cv2.approxPolyDP(contour, eps, True).reshape(-1, 2)
+    if len(poly) < 3:
+        poly = cv2.boxPoints(cv2.minAreaRect(contour))
     if len(poly) > max_points:            # keep the OSC message bounded
         idx = np.linspace(0, len(poly) - 1, max_points).astype(int)
         poly = poly[idx]
@@ -482,9 +492,10 @@ def main():
                         # polygon, no separate angle needed.
                         poly, pts_mm = build_outline_mm(
                             ct, cx, cy, fx, fy, zs, floor, use_floor)
-                        osc.send_message("/outline",
-                                         [c["name"], len(poly)] + pts_mm
-                                         + [args.outline_height])
+                        if len(poly) >= 3:     # never send a degenerate polygon
+                            osc.send_message("/outline",
+                                             [c["name"], len(poly)] + pts_mm
+                                             + [args.outline_height])
                 else:
                     l1 = f"{c['name']}/{slot['shape']} z=? {int(rw)}x{int(rh)}px"
                     l2 = ""

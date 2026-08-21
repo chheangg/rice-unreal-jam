@@ -213,6 +213,29 @@ def test_build_outline_mm_preserves_winding_order():
     assert np.array_equal(poly, expected_order)
 
 
+def test_build_outline_mm_never_returns_degenerate_polygon_from_a_line():
+    """A near-zero-area sliver contour can collapse to < 3 points under
+    approxPolyDP - build_outline_mm must fall back to a real (>=3 vertex)
+    polygon rather than handing Unreal's Geometry Script extrude a line or
+    a single point on /outline."""
+    line = np.array([[0, 0], [50, 0]], dtype=np.int32).reshape(-1, 1, 2)
+    fx = fy = 100.0
+    floor = loc.FloorFrame()
+    poly, pts_mm = loc.build_outline_mm(line, 25.0, 0.0, fx, fy, 1.0,
+                                        floor, False)
+    assert len(poly) >= 3
+    assert len(pts_mm) == 2 * len(poly)
+
+
+def test_build_outline_mm_never_returns_degenerate_polygon_from_a_point():
+    point = np.array([[5, 5]], dtype=np.int32).reshape(-1, 1, 2)
+    fx = fy = 100.0
+    floor = loc.FloorFrame()
+    poly, pts_mm = loc.build_outline_mm(point, 5.0, 5.0, fx, fy, 1.0,
+                                        floor, False)
+    assert len(poly) >= 3
+
+
 def test_build_outline_mm_caps_point_count():
     # A many-sided polygon (near-circle) should be downsampled to <= 16 pts.
     n = 40
