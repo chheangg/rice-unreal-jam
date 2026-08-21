@@ -31,7 +31,18 @@ Controls (focus the window):
     f  - toggle FLOOR-frame vs CAMERA-frame coordinates
     d  - toggle a colourised depth-map window (red=near, blue=far)
     p  - print every piece: colour/shape, XYZ, size cm, angle
+    s  - save current sliders + --fov/--outline-height/--osc-host/
+         --osc-port/--settle to lego_locator_config.json, so the next run
+         starts from this tuning instead of the hardcoded defaults (see
+         locator_config.py) - CLI flags passed explicitly still override
+         whatever's in the file
     Esc / q - quit
+
+CONFIG PERSISTENCE: on startup, argparse defaults for --fov/
+--outline-height/--osc-host/--osc-port/--settle and the initial slider
+positions are seeded from lego_locator_config.json if present (falls back
+to the hardcoded defaults otherwise). Press 's' any time to save the
+CURRENT sliders + flags back to that file.
 
 Also reports, per piece: SHAPE (square/circle/cross, from contour
 geometry), ROTATION (degrees, when an ArUco tag sits on the block), and
@@ -67,9 +78,9 @@ from collections import Counter, deque
 import cv2
 import numpy as np
 
-from lego_locator import (COLORS, find_pieces, as_source, classify_shape,
-                          DEFAULT_S_FLOOR, DEFAULT_V_FLOOR, DEFAULT_MIN_AREA_100)
+from lego_locator import COLORS, find_pieces, as_source, classify_shape
 from depth_estimator import DepthEstimator
+import locator_config
 
 ARUCO_DICT = "DICT_4X4_50"          # matches generate_aruco_tags.py
 
@@ -326,27 +337,28 @@ def build_outline_mm(contour, cx, cy, fx, fy, z, floor, use_floor,
 
 
 def main():
+    saved_cfg = locator_config.load()          # falls back to hardcoded defaults
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("source", nargs="?", default="0",
                     help="camera index, stream URL, or video file (default 0)")
-    ap.add_argument("--fov", type=float, default=60.0,
+    ap.add_argument("--fov", type=float, default=saved_cfg["fov"],
                     help="assumed horizontal FOV (deg) if DA3 gives no intrinsics")
     ap.add_argument("--model", default=None,
                     help="override DA3 model id (e.g. depth-anything/DA3-SMALL)")
     ap.add_argument("--osc", action="store_true",
                     help="send [name,x,y,angle,sx,sy,z] to Unreal on /obj")
-    ap.add_argument("--osc-host", default="127.0.0.1")
-    ap.add_argument("--osc-port", type=int, default=7000)
+    ap.add_argument("--osc-host", default=saved_cfg["osc_host"])
+    ap.add_argument("--osc-port", type=int, default=saved_cfg["osc_port"])
     ap.add_argument("--no-floor", action="store_true",
                     help="report camera-frame XYZ instead of floor-frame")
-    ap.add_argument("--settle", type=float, default=3.0,
+    ap.add_argument("--settle", type=float, default=saved_cfg["settle"],
                     help="seconds a new piece must persist before it's confirmed "
                          "and reported/sent (default 3; 0 = instant)")
     ap.add_argument("--debug-size", action="store_true",
                     help="log raw pixel size and depth per piece, to check "
                          "whether pixel*depth (the real size) stays constant")
-    ap.add_argument("--outline-height", type=float, default=2.0,
+    ap.add_argument("--outline-height", type=float, default=saved_cfg["outline_height"],
                     help="fixed extrusion height in cm sent with each piece's "
                          "outline polygon on /outline (default 2.0)")
     args = ap.parse_args()
@@ -377,9 +389,10 @@ def main():
 
     win = "Lego locator xyz"
     cv2.namedWindow(win)
-    cv2.createTrackbar("S floor", win, DEFAULT_S_FLOOR, 255, lambda v: None)
-    cv2.createTrackbar("V floor", win, DEFAULT_V_FLOOR, 255, lambda v: None)
-    cv2.createTrackbar("Min area/100", win, DEFAULT_MIN_AREA_100, 100, lambda v: None)
+    cv2.createTrackbar("S floor", win, saved_cfg["s_floor"], 255, lambda v: None)
+    cv2.createTrackbar("V floor", win, saved_cfg["v_floor"], 255, lambda v: None)
+    cv2.createTrackbar("Min area/100", win, saved_cfg["min_area_100"], 100,
+                       lambda v: None)
 
     t_prev, fps = time.time(), 0.0
     tracks = Tracks(settle_seconds=args.settle)
@@ -564,6 +577,15 @@ def main():
                     for (n, sh, X, Y, Z, w, h, ang) in report))
             else:
                 print("no pieces with depth yet")
+        elif key == ord('s'):
+            saved = locator_config.save({
+                "s_floor": s_floor, "v_floor": v_floor,
+                "min_area_100": min_area // 100,
+                "fov": args.fov, "outline_height": args.outline_height,
+                "osc_host": args.osc_host, "osc_port": args.osc_port,
+                "settle": args.settle,
+            })
+            print(f"[config] saved to {locator_config.DEFAULT_PATH}: {saved}")
 
     depth.stop()
     cap.release()

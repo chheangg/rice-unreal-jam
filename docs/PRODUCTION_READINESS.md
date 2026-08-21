@@ -66,24 +66,24 @@ scrollback limits (or piped to a file with no rotation) and:
 run; keep `--debug-size` but rate-limit it (e.g. print at most once/sec per
 piece).
 
-## 4. No config persistence — every tuned value resets on each run
+## 4. Config persistence — FIXED (`locator_config.py`)
 
 Values a team tunes once and wants to keep (per `lego_locator_xyz.py`
 `argparse` args): `--fov`, `--outline-height`, `--osc-host`, `--osc-port`,
 `--settle`, plus the **live GUI sliders** `S floor` / `V floor` / `Min
-area` (`DEFAULT_S_FLOOR`, `DEFAULT_V_FLOOR`, `DEFAULT_MIN_AREA_100` in
-`lego_locator.py`, currently hardcoded module constants, not even CLI
-flags). None of this persists — every run starts from the same defaults,
-so the exact same color-tuning ritual from `docs/ROADMAP.md`'s "Step 1"
-has to be repeated by hand, or flags have to be retyped, each session.
+area`. Previously none of this persisted — every run started from the same
+hardcoded defaults.
 
-**Gap:** a small JSON/YAML config file (read on startup if present, CLI
-flags override it, an optional `--save-config` writes the current tuned
-values back out) is warranted here — this is a repo where the team
-explicitly documents re-tuning per lighting setup (`README.md` "Notes"),
-which is exactly the workflow config persistence is for. Not a big lift:
-one `json.load`/`json.dump` pair and a slider-change callback that writes
-back, since the sliders already read/write via `cv2.getTrackbarPos`.
+**Status: implemented this session.** `locator_config.py` provides
+`load()`/`save()` against `lego_locator_config.json` (not committed — a
+per-rig/per-lighting snapshot, same reasoning as why the file isn't a repo
+default). `lego_locator_xyz.py` now seeds its `argparse` defaults from the
+saved config (an explicit CLI flag still wins), seeds the GUI sliders'
+initial positions from it, and a new `s` key saves the CURRENT sliders +
+flags back to the file. A missing or corrupt config file falls back to the
+original hardcoded defaults rather than crashing — see
+`tests/test_locator_config.py` (9 tests: round-trip, missing/corrupt/
+non-dict file, partial file, atomic save, unknown-key handling).
 
 ## 5. Multi-piece disambiguation: same-colour pieces can swap identity
 

@@ -135,6 +135,14 @@ With `--osc`, it sends **two** messages per confirmed piece:
   `tasks/2026-08-21-unreal-outline-extrude.md` for the Unreal-side plan
   (Geometry Script polygon extrude).
 
+**Tuning persists across runs**: press `s` while the window is focused to
+save the current S/V-floor + min-area sliders and `--fov`/
+`--outline-height`/`--osc-host`/`--osc-port`/`--settle` to
+`lego_locator_config.json` (see `locator_config.py`). The next run loads
+that file automatically and starts from the saved tuning instead of the
+hardcoded defaults; any CLI flag you pass explicitly still overrides it.
+This file is per-rig/per-lighting and isn't meant to be committed.
+
 ### 3. No camera handy?
 
 Run `send_test.py` instead — it fakes the tracker. It sends the *same*
